@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import Map from 'react-map-gl/maplibre';
+import MapLibreMap from 'react-map-gl/maplibre';
 import DeckGL from '@deck.gl/react';
 import { GeoJsonLayer, TextLayer } from '@deck.gl/layers';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -9,11 +9,19 @@ import Legend from './Legend';
 import Tooltip from './Tooltip';
 import RightPanel from './RightPanel';
 import { INITIAL_VIEW_STATE, MAP_STYLE, COLORS, LAYER_IDS } from '../constants/mapConfig';
-import { loadIndiaBoundaries } from '../utils/indiaBoundariesApi';
+import {
+  fetchAllIndiaBoundaries,
+  buildDistrictLabels,
+  getFeatureBounds,
+  getPolygonCentroid,
+} from '../utils/indiaBoundariesApi';
 import { fetchHotspots, getSoilColor, getYieldColor } from '../utils/hotspotsApi';
-import { buildDistrictLabels } from '../utils/geometry';
+import { fetchDegradationLookup } from '../utils/districtsDegradationApi';
+import { useAppState } from '../context/AppStateContext';
 
 function MapScene() {
+  const { selectedDistrict, setSelectedDistrict } = useAppState();
+
   // Map view state
   const [viewState, setViewState] = useState(INITIAL_VIEW_STATE);
 
@@ -23,21 +31,27 @@ function MapScene() {
   // GeoJSON data
   const [boundaries, setBoundaries] = useState(null);
   const [hotspots, setHotspots] = useState(null);
+  const [degradationLookup, setDegradationLookup] = useState(() => new Map());
 
   // Hover state
   const [hoveredFeature, setHoveredFeature] = useState(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
 
-  // Selected district for right panel
-  const [selectedDistrict, setSelectedDistrict] = useState(null);
+  // Show all district colors (true) or only highlight hovered district (false)
+  const [showAllColors, setShowAllColors] = useState(true);
 
   // Load India boundaries on mount
   useEffect(() => {
-    async function loadBoundaries() {
-      const data = await loadIndiaBoundaries();
-      setBoundaries(data);
-    }
-    loadBoundaries();
+    fetchAllIndiaBoundaries()
+      .then(setBoundaries)
+      .catch((err) => console.error('Failed to load India boundaries:', err));
+  }, []);
+
+  // Load degradation/risk lookup for district coloring
+  useEffect(() => {
+    fetchDegradationLookup()
+      .then(setDegradationLookup)
+      .catch(() => setDegradationLookup(new Map()));
   }, []);
 
   // Load hotspots when selectedIssue changes
@@ -53,10 +67,51 @@ function MapScene() {
     loadHotspots();
   }, [selectedIssue]);
 
-  // Build district labels from boundaries
+  // Build district labels from boundaries (Dist_Code at centroids)
   const districtLabels = useMemo(() => {
     return boundaries ? buildDistrictLabels(boundaries) : [];
   }, [boundaries]);
+
+  // Districts list for sidebar search
+  const districts = useMemo(
+    () => (boundaries?.features ?? []).map((feature) => ({ feature })),
+    [boundaries]
+  );
+
+  // Hovered district index for highlight
+  const hoveredBoundaryIndex =
+    hoveredFeature?.type === 'boundary' ? hoveredFeature.index : null;
+
+  // Zoom to selected district
+  const handleDistrictSelect = useCallback((feature) => {
+    if (!feature?.geometry) return;
+    const bounds = getFeatureBounds(feature.geometry);
+    if (bounds) {
+      const [minLng, minLat, maxLng, maxLat] = bounds;
+      const centerLng = (minLng + maxLng) / 2;
+      const centerLat = (minLat + maxLat) / 2;
+      const width = maxLng - minLng;
+      const height = maxLat - minLat;
+      const span = Math.max(width, height, 0.1);
+      const zoom = Math.min(12, Math.max(6, 10 - Math.log2(span * 2)));
+      setViewState((prev) => ({
+        ...prev,
+        longitude: centerLng,
+        latitude: centerLat,
+        zoom,
+      }));
+    } else {
+      const centroid = getPolygonCentroid(feature.geometry);
+      if (centroid) {
+        setViewState((prev) => ({
+          ...prev,
+          longitude: centroid[0],
+          latitude: centroid[1],
+          zoom: 9,
+        }));
+      }
+    }
+  }, []);
 
   // Handle view state change
   const handleViewStateChange = useCallback(({ viewState: newViewState }) => {
@@ -68,18 +123,22 @@ function MapScene() {
     setSelectedIssue((current) => (current === issue ? null : issue));
   }, []);
 
-  // Handle boundary hover
+  // Handle boundary hover (store index for highlight)
   const handleBoundaryHover = useCallback((info) => {
     if (info.object) {
+      const p = info.object.properties || {};
+      const key = `${p.State_Name ?? p.state}|${p.Dist_Name ?? p.district}`;
+      const degradation = degradationLookup.get(key);
       setHoveredFeature({
         type: 'boundary',
-        properties: info.object.properties,
+        properties: { ...p, degradation_level: degradation },
+        index: info.index,
       });
       setTooltipPosition({ x: info.x, y: info.y });
     } else if (hoveredFeature?.type === 'boundary') {
       setHoveredFeature(null);
     }
-  }, [hoveredFeature]);
+  }, [hoveredFeature, degradationLookup]);
 
   // Handle hotspot hover
   const handleHotspotHover = useCallback((info) => {
@@ -103,12 +162,12 @@ function MapScene() {
         setSelectedDistrict(districtId);
       }
     }
-  }, []);
+  }, [setSelectedDistrict]);
 
   // Close the right panel
   const handleClosePanel = useCallback(() => {
     setSelectedDistrict(null);
-  }, []);
+  }, [setSelectedDistrict]);
 
   // Get color for hotspot based on selected issue
   const getHotspotColor = useCallback((feature) => {
@@ -122,46 +181,21 @@ function MapScene() {
     return COLORS.unknown;
   }, [selectedIssue]);
 
+  // Get fill color for a district by risk level
+  const getDegradationColor = useCallback((level) => {
+    const l = (level || '').toLowerCase();
+    if (l === 'low') return COLORS.lowRisk;
+    if (l === 'medium') return COLORS.mediumRisk;
+    if (l === 'high') return COLORS.highRisk;
+    if (l === 'severe') return COLORS.severeRisk;
+    return COLORS.unknown;
+  }, []);
+
   // Build layers
   const layers = useMemo(() => {
     const layerList = [];
 
-    // India boundaries layer
-    if (boundaries) {
-      layerList.push(
-        new GeoJsonLayer({
-          id: LAYER_IDS.boundaries,
-          data: boundaries,
-          stroked: true,
-          filled: true,
-          lineWidthMinPixels: 1,
-          lineWidthMaxPixels: 2,
-          getFillColor: COLORS.boundaryFill,
-          getLineColor: COLORS.boundaryLine,
-          pickable: true,
-          onHover: handleBoundaryHover,
-        })
-      );
-
-      // District labels layer
-      layerList.push(
-        new TextLayer({
-          id: LAYER_IDS.labels,
-          data: districtLabels,
-          getPosition: (d) => d.coordinates,
-          getText: (d) => d.name,
-          getSize: 14,
-          getColor: COLORS.labelText,
-          fontFamily: 'Outfit, sans-serif',
-          fontWeight: 500,
-          getTextAnchor: 'middle',
-          getAlignmentBaseline: 'center',
-          billboard: false,
-        })
-      );
-    }
-
-    // Hotspots layer (only when issue is selected)
+    // Hotspots layer first (underneath), then districts (filled by risk), then labels
     if (selectedIssue && hotspots) {
       layerList.push(
         new GeoJsonLayer({
@@ -182,12 +216,74 @@ function MapScene() {
       );
     }
 
+    // India boundaries layer with degradation coloring
+    if (boundaries) {
+      layerList.push(
+        new GeoJsonLayer({
+          id: LAYER_IDS.boundaries,
+          data: boundaries,
+          stroked: true,
+          filled: true,
+          getFillColor: (feature, { index }) => {
+            const isHovered = index === hoveredBoundaryIndex;
+            if (isHovered) {
+              // Brighten hovered district
+              const p = feature.properties || {};
+              const key = `${p.State_Name ?? p.state}|${p.Dist_Name ?? p.district}`;
+              const level = degradationLookup.get(key);
+              const base = getDegradationColor(level);
+              return [Math.min(255, base[0] + 40), Math.min(255, base[1] + 40), Math.min(255, base[2] + 40), 255];
+            }
+            if (!showAllColors) {
+              return COLORS.boundaryFillNeutral;
+            }
+            const p = feature.properties || {};
+            const key = `${p.State_Name ?? p.state}|${p.Dist_Name ?? p.district}`;
+            const level = degradationLookup.get(key);
+            return getDegradationColor(level);
+          },
+          getLineColor: COLORS.boundaryLine,
+          lineWidthUnits: 'pixels',
+          lineWidthMinPixels: 1,
+          lineWidthMaxPixels: 6,
+          pickable: true,
+          onHover: handleBoundaryHover,
+          updateTriggers: {
+            getFillColor: [showAllColors, hoveredBoundaryIndex, degradationLookup],
+          },
+        })
+      );
+
+      // District labels layer (Dist_Code at centroids)
+      if (districtLabels.length) {
+        layerList.push(
+          new TextLayer({
+            id: LAYER_IDS.labels,
+            data: districtLabels,
+            getPosition: (d) => d.position,
+            getText: (d) => d.text,
+            getSize: 14,
+            getColor: COLORS.labelText,
+            fontFamily: 'Outfit, sans-serif',
+            fontWeight: 500,
+            getTextAnchor: 'middle',
+            getAlignmentBaseline: 'center',
+            billboard: false,
+          })
+        );
+      }
+    }
+
     return layerList;
   }, [
     boundaries,
     districtLabels,
     hotspots,
     selectedIssue,
+    hoveredBoundaryIndex,
+    showAllColors,
+    degradationLookup,
+    getDegradationColor,
     getHotspotColor,
     handleBoundaryHover,
     handleHotspotHover,
@@ -208,6 +304,10 @@ function MapScene() {
         onIssueChange={handleIssueChange}
         selectedDistrict={selectedDistrict}
         onDistrictSelect={setSelectedDistrict}
+        districts={districts}
+        onDistrictSearchSelect={handleDistrictSelect}
+        showAllColors={showAllColors}
+        onShowAllColorsChange={setShowAllColors}
       />
 
       <div className={`map-container ${selectedDistrict ? 'panel-open' : ''}`}>
@@ -218,7 +318,7 @@ function MapScene() {
           layers={layers}
           getCursor={getCursor}
         >
-          <Map mapStyle={MAP_STYLE} />
+          <MapLibreMap mapStyle={MAP_STYLE} />
         </DeckGL>
 
         <Legend selectedIssue={selectedIssue} />

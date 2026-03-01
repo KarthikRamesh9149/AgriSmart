@@ -126,3 +126,46 @@ export function getBboxFromViewState(viewState) {
     maxLat: latitude + halfDegrees * 0.75,
   };
 }
+
+/**
+ * Ray-casting point in polygon test.
+ * @param {[number, number]} point - [lng, lat]
+ * @param {number[][]} ring - Polygon ring coordinates
+ * @returns {boolean}
+ */
+export function isPointInRing(point, ring) {
+  const [x, y] = point;
+  let inside = false;
+
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const xi = ring[i][0];
+    const yi = ring[i][1];
+    const xj = ring[j][0];
+    const yj = ring[j][1];
+
+    const intersects = yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi + 1e-12) + xi;
+    if (intersects) inside = !inside;
+  }
+
+  return inside;
+}
+
+/**
+ * Point-in-geometry for Polygon/MultiPolygon.
+ * @param {[number, number]} point - [lng, lat]
+ * @param {object} geometry - GeoJSON geometry
+ * @returns {boolean}
+ */
+export function isPointInGeometry(point, geometry) {
+  if (!geometry) return false;
+
+  if (geometry.type === 'Polygon') {
+    return isPointInRing(point, geometry.coordinates[0] || []);
+  }
+
+  if (geometry.type === 'MultiPolygon') {
+    return geometry.coordinates.some((polygon) => isPointInRing(point, polygon[0] || []));
+  }
+
+  return false;
+}

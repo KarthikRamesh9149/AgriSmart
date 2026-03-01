@@ -15,6 +15,13 @@ function CropCard({ crop, rank, isExpanded = false, onToggle }) {
     return '';
   };
 
+  // Color code based on sustainability threshold (60 pts min)
+  const getScoreColor = (score) => {
+    if (score >= 70) return 'var(--accent-green)';
+    if (score >= 40) return 'var(--accent-yellow)';
+    return 'var(--accent-red)';
+  };
+
   return (
     <div className={`crop-card ${isExpanded ? 'expanded' : ''}`} onClick={onToggle}>
       <div className="crop-card-header">
@@ -24,7 +31,9 @@ function CropCard({ crop, rank, isExpanded = false, onToggle }) {
           <div className="crop-card-local">{local_name}</div>
         </div>
         <div className="crop-card-score">
-          <span className="score-value">{match_score}</span>
+          <span className="score-value" style={{ color: getScoreColor(match_score) }}>
+            {match_score}
+          </span>
           <span className="score-label">Match</span>
         </div>
       </div>
@@ -53,6 +62,10 @@ function CropCard({ crop, rank, isExpanded = false, onToggle }) {
               <div className="breakdown-item">
                 <span className="breakdown-label">Drought Tolerance</span>
                 <span className="breakdown-value">{score_breakdown.drought} pts</span>
+              </div>
+              <div className="breakdown-item sustainability-threshold">
+                <span className="breakdown-label">Min. for sustainability</span>
+                <span className="breakdown-value">60 pts</span>
               </div>
             </div>
           </div>

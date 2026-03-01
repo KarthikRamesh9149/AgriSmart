@@ -1,11 +1,17 @@
+import { ErrorBoundary } from './components/ErrorBoundary';
 import MapScene from './components/MapScene';
+import { AppStateProvider } from './context/AppStateContext';
 import './App.css';
 
 function App() {
   return (
-    <div className="app">
-      <MapScene />
-    </div>
+    <ErrorBoundary>
+      <div className="app">
+        <AppStateProvider>
+          <MapScene />
+        </AppStateProvider>
+      </div>
+    </ErrorBoundary>
   );
 }
 

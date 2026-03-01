@@ -4,7 +4,24 @@
  */
 
 // Toggle between real API and local data
-const USE_REAL_API = false;
+const USE_REAL_API = true;
+
+function mapDistrictApiToClient(apiDistrict) {
+  if (apiDistrict?.feature_1_land_intelligence) {
+    return apiDistrict;
+  }
+
+  return {
+    district_id: apiDistrict.district_id,
+    name: apiDistrict.name,
+    state: apiDistrict.state,
+    region_type: apiDistrict.region_type,
+    feature_1_land_intelligence: apiDistrict.land_intelligence,
+    scores: apiDistrict.scores,
+    crop_economics: apiDistrict.crop_economics,
+    policy_arbitrage: apiDistrict.policy_arbitrage,
+  };
+}
 
 /**
  * Fetch crop recommendations for a district
@@ -13,11 +30,15 @@ const USE_REAL_API = false;
  */
 export async function fetchCropRecommendations(districtId) {
   if (USE_REAL_API) {
-    const response = await fetch(`/api/crops/recommendations/${districtId}`);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch crop recommendations: ${response.status}`);
+    try {
+      const response = await fetch(`/api/crops/recommendations/${districtId}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch crop recommendations: ${response.status}`);
+      }
+      return response.json();
+    } catch (error) {
+      console.warn('Falling back to local crop recommendations stub:', error);
     }
-    return response.json();
   }
 
   // Stub: Load district data and generate mock recommendations
@@ -31,15 +52,19 @@ export async function fetchCropRecommendations(districtId) {
  */
 export async function fetchCropWhyExplanation(districtId) {
   if (USE_REAL_API) {
-    const response = await fetch('/api/llm/feature2-why', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ district_id: districtId }),
-    });
-    if (!response.ok) {
-      throw new Error(`Failed to fetch crop explanation: ${response.status}`);
+    try {
+      const response = await fetch('/api/llm/feature2-why', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ district_id: districtId }),
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to fetch crop explanation: ${response.status}`);
+      }
+      return response.json();
+    } catch (error) {
+      console.warn('Falling back to local crop explanation stub:', error);
     }
-    return response.json();
   }
 
   // Stub: Generate fallback explanation
@@ -53,11 +78,16 @@ export async function fetchCropWhyExplanation(districtId) {
  */
 export async function fetchDistrictWithScores(districtId) {
   if (USE_REAL_API) {
-    const response = await fetch(`/api/districts/${districtId}`);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch district: ${response.status}`);
+    try {
+      const response = await fetch(`/api/districts/${districtId}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch district: ${response.status}`);
+      }
+      const data = await response.json();
+      return mapDistrictApiToClient(data);
+    } catch (error) {
+      console.warn('Falling back to local district stub:', error);
     }
-    return response.json();
   }
 
   // Stub: Load from public folder
@@ -83,20 +113,84 @@ export async function fetchDistrictWithScores(districtId) {
  */
 export async function fetchNarrative(districtId) {
   if (USE_REAL_API) {
-    const response = await fetch('/api/llm/feature1-narrative', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ district_id: districtId }),
-    });
-    if (!response.ok) {
-      throw new Error(`Failed to fetch narrative: ${response.status}`);
+    try {
+      const response = await fetch('/api/llm/feature1-narrative', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ district_id: districtId }),
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to fetch narrative: ${response.status}`);
+      }
+      return response.json();
+    } catch (error) {
+      console.warn('Falling back to local narrative stub:', error);
     }
-    return response.json();
   }
 
   // Stub: Generate fallback narrative
   const district = await fetchDistrictWithScores(districtId);
   return generateStubNarrative(district);
+}
+
+/**
+ * Fetch dynamic climate snapshot for selected time horizon (Feature 4)
+ * @param {string} districtId
+ * @param {number} timeHorizon
+ * @param {number} currentYear
+ * @returns {Promise<Object>}
+ */
+export async function fetchTimeTravelSnapshot(districtId, timeHorizon, currentYear) {
+  if (USE_REAL_API) {
+    const response = await fetch('/api/llm/feature4-time-travel', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        district_id: districtId,
+        time_horizon: timeHorizon,
+        current_year: currentYear,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch time travel snapshot: ${response.status}`);
+    }
+
+    return response.json();
+  }
+
+  const districtResponse = await fetch(`/districts/${districtId}.json`);
+  const district = await districtResponse.json();
+  const base = district.feature_1_land_intelligence;
+
+  const snapshot =
+    timeHorizon === 2000
+      ? {
+          temp_celsius: Number((base.climate.max_temp_c - 2.8).toFixed(1)),
+          rainfall_mm: Math.round(base.water.rainfall_mm_annual * 1.3),
+          heat_days_per_year: Math.max(0, base.climate.heat_stress_days_above_40c - 18),
+          label: 'Baseline (2000)',
+        }
+      : timeHorizon === currentYear
+        ? {
+            temp_celsius: base.climate.max_temp_c,
+            rainfall_mm: base.water.rainfall_mm_annual,
+            heat_days_per_year: base.climate.heat_stress_days_above_40c,
+            label: 'Current',
+          }
+        : {
+            temp_celsius: Number((base.climate.max_temp_c + 3.5).toFixed(1)),
+            rainfall_mm: Math.max(0, Math.round(base.water.rainfall_mm_annual * 0.75)),
+            heat_days_per_year: base.climate.heat_stress_days_above_40c + 28,
+            label: `Projection (${timeHorizon})`,
+          };
+
+  return {
+    district_id: districtId,
+    time_horizon: timeHorizon,
+    snapshot,
+    generated_at: new Date().toISOString(),
+  };
 }
 
 // Stub helpers

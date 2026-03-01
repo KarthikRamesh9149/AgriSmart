@@ -3,9 +3,33 @@
  * Displays district health scores and AI-generated narrative
  */
 
+import TimeTravelSlider from '../DistrictPanel/Feature1/TimeTravelSlider';
 import ScoreBar from '../ui/ScoreBar';
+import SoilDegradationChart from '../charts/SoilDegradationChart';
+import YieldTrendChart from '../charts/YieldTrendChart';
+import { selectClimateSnapshot } from '../../domain/feature1/timeHorizon';
+import { computeClimateDriftScore } from '../../domain/feature1/scoring';
 
-function LandIntelligence({ district, scores, narrative, narrativeLoading, onRefresh }) {
+function getHorizonLabel(timeHorizon, currentYear) {
+  if (timeHorizon === 2000) return `${timeHorizon} (Baseline)`;
+  if (timeHorizon === currentYear) return `${timeHorizon} (Current)`;
+  return `${timeHorizon} (Projection)`;
+}
+
+function LandIntelligence({
+  district,
+  scores,
+  narrative,
+  narrativeLoading,
+  onRefresh,
+  timeHorizon,
+  onTimeHorizonChange,
+  timeTravelSnapshot,
+  historicalSnapshot,
+  projectedSnapshot,
+  timeTravelLoading,
+  onRefreshTimeTravel,
+}) {
   if (!district) {
     return (
       <div className="panel-empty">
@@ -14,7 +38,16 @@ function LandIntelligence({ district, scores, narrative, narrativeLoading, onRef
     );
   }
 
+  const currentYear = new Date().getFullYear();
   const landIntel = district.feature_1_land_intelligence;
+  // IMPORTANT: Always use timeTravelSnapshot for the CURRENT timeHorizon from the hook
+  // If hook doesn't have it, fall back to local stub (this ensures different values per year)
+  const climateSnapshot = timeTravelSnapshot || selectClimateSnapshot(district, timeHorizon, currentYear);
+  const histSnapshot = historicalSnapshot || selectClimateSnapshot(district, 2000, currentYear);
+  const projSnapshot = projectedSnapshot || selectClimateSnapshot(district, 2050, currentYear);
+  const climateDrift = computeClimateDriftScore(histSnapshot, projSnapshot);
+  const projectionSelected = timeHorizon === 2050;
+  const horizonDisplay = getHorizonLabel(timeHorizon, currentYear);
 
   return (
     <div className="land-intelligence-panel">
@@ -31,9 +64,28 @@ function LandIntelligence({ district, scores, narrative, narrativeLoading, onRef
         </div>
       </div>
 
+      {/* Time Travel */}
+      <div className="panel-section">
+        <div className="section-header">
+          <h4 className="section-title">Time Travel</h4>
+          <button className="refresh-btn" onClick={onRefreshTimeTravel} disabled={timeTravelLoading}>
+            {timeTravelLoading ? '...' : '↻'}
+          </button>
+        </div>
+        <TimeTravelSlider value={timeHorizon} onChange={onTimeHorizonChange} currentYear={currentYear} />
+        <p className="time-horizon-note">Time Horizon: {horizonDisplay}</p>
+      </div>
+
       {/* Health Scores */}
       <div className="panel-section">
         <h4 className="section-title">Digital Twin Health Scores</h4>
+        <p className="scores-legend">
+          Each score is 0–100 (higher = healthier).
+          <br /><span>🌱 Soil: organic carbon, pH &amp; nitrogen levels.</span>
+          <br /><span>💧 Water: aquifer depth vs extraction rate.</span>
+          <br /><span>🌡️ Climate: heat stress days + drought risk.</span>
+          <br /><span>🌾 Crop: water efficiency &amp; soil match for current crop.</span>
+        </p>
         <div className="scores-grid">
           {scores && (
             <>
@@ -51,7 +103,7 @@ function LandIntelligence({ district, scores, narrative, narrativeLoading, onRef
 
       {/* Key Metrics */}
       <div className="panel-section">
-        <h4 className="section-title">Key Indicators</h4>
+        <h4 className="section-title">Key Indicators ({horizonDisplay})</h4>
         <div className="metrics-grid">
           <div className="metric-item">
             <span className="metric-icon">💧</span>
@@ -63,27 +115,36 @@ function LandIntelligence({ district, scores, narrative, narrativeLoading, onRef
           <div className="metric-item">
             <span className="metric-icon">🌡️</span>
             <div className="metric-content">
-              <span className="metric-value">{landIntel.climate.max_temp_c}°C</span>
-              <span className="metric-label">Max Temperature</span>
+              <span className="metric-value">{climateSnapshot?.temp_celsius || 'N/A'}°C</span>
+              <span className="metric-label">Average Temperature</span>
             </div>
           </div>
           <div className="metric-item">
             <span className="metric-icon">🌧️</span>
             <div className="metric-content">
-              <span className="metric-value">{landIntel.water.rainfall_mm_annual}mm</span>
+              <span className="metric-value">{climateSnapshot?.rainfall_mm || 'N/A'}mm</span>
               <span className="metric-label">Annual Rainfall</span>
             </div>
           </div>
           <div className="metric-item">
-            <span className="metric-icon">🏜️</span>
+            <span className="metric-icon">🔥</span>
             <div className="metric-content">
-              <span className="metric-value">
-                {landIntel.climate.drought_probability.replace('_', ' ')}
-              </span>
-              <span className="metric-label">Drought Probability</span>
+              <span className="metric-value">{climateSnapshot?.heat_days_per_year || 'N/A'}</span>
+              <span className="metric-label">Heat Stress Days / Year</span>
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Climate Drift */}
+      <div className="panel-section">
+        <h4 className="section-title">Climate Drift Score</h4>
+        <ScoreBar label="Historical vs 2050 Drift" value={projectionSelected ? (climateDrift?.score || 50) : 50} />
+        <p className="time-horizon-note">
+          {projectionSelected && climateDrift?.components
+            ? `ΔTemp ${climateDrift.components.temp_delta_celsius || 0}°C, ΔRainfall ${climateDrift.components.rainfall_delta_pct || 0}%`
+            : 'Projection not selected. Drift shown as baseline reference.'}
+        </p>
       </div>
 
       {/* Current Crop Status */}
@@ -107,6 +168,16 @@ function LandIntelligence({ district, scores, narrative, narrativeLoading, onRef
             </span>
           </div>
         </div>
+      </div>
+
+      {/* Soil Degradation Chart */}
+      <div className="panel-section">
+        <SoilDegradationChart landIntel={landIntel} />
+      </div>
+
+      {/* Yield Trend Chart */}
+      <div className="panel-section">
+        <YieldTrendChart districtData={district} districtId={district?.district_id} />
       </div>
 
       {/* AI Narrative */}
