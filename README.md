@@ -229,15 +229,6 @@ MIT License - See LICENSE.md
 
 ---
 
-## 📞 Support
-
-📧 support@agrismart.ai  
-🐛 GitHub Issues  
-💬 Discord Community  
-📱 @AgriSmartAI
-
----
-
 ## 🏆 Hackathon Details
 
 - **Event:** Mistral AI Hackathon
@@ -259,16 +250,6 @@ MIT License - See LICENSE.md
 **Mannan Zaveri** 
 **Vansh Kalra** 
 **Shashwat Manish** 
-
----
-
-## 📊 Project Stats
-
-- 📝 **Lines of Code:** 8,500+
-- 🎯 **Components:** 25+
-- 📦 **Dependencies:** 42
-- ⚡ **Build Time:** 3s
-- 🚀 **Bundle:** 450KB (gzipped)
 
 ---
 
