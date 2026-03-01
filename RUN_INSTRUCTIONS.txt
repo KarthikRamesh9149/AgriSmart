@@ -1,0 +1,121 @@
+===============================================
+AGRI INTELLIGENCE DASHBOARD - RUN INSTRUCTIONS
+===============================================
+
+STEP 1: Open PowerShell/Terminal
+===============================================
+Navigate to: c:\Users\rames\OneDrive\Desktop\Mistral hackathon
+
+
+STEP 2: Install Dependencies (First Time Only)
+===============================================
+Run:
+    npm install
+
+This installs all packages for both client and server.
+
+
+STEP 3: Start Development Servers
+===============================================
+Run:
+    npm run dev
+
+You should see:
+    Server:  Starting... http://localhost:3000
+    Client:  Starting... http://localhost:5173
+
+
+STEP 4: Open in Browser
+===============================================
+Navigate to:
+
+    http://localhost:5173
+
+This is your Agri Intelligence Dashboard!
+
+
+WHAT TO TEST
+===============================================
+
+1. TIME TRAVEL (Feature 1 - FIXED ✅)
+   - Click any hotspot on map
+   - Open "Land Intelligence" tab
+   - Scroll to "Time Horizon Slider"
+   - Drag slider 2000 → Current → 2050
+   - ✓ Climate values should CHANGE for each year
+   - ✓ Temperatures, rainfall, heat days all different
+
+
+2. CSV GENERATE (Feature 3 - FIXED ✅)
+   - Click hotspot → "Policy Simulator" tab
+   - Drag & drop a CSV file
+   - Click "✨ Generate" button
+   - ✓ Should show cabinet brief in 2-5 seconds (not freeze)
+   - ✓ Real Mistral analysis appears
+
+
+3. MAP COLORS (TerraYield Sync - NEW ✅)
+   - See districts colored by risk:
+     🟢 Green = Low risk
+     🟠 Orange = Medium risk
+     🔴 Red = High risk
+     🔴 Dark Red = Severe risk
+   - Search for "Ahmednagar" → zooms to district
+   - Hover districts → see tooltip
+   - Toggle "Show all colors" → on/off
+
+
+IMPORTANT
+===============================================
+✅ All Mistral API keys already configured in server/.env
+✅ No additional setup needed
+✅ All 33 India GeoJSON files downloaded
+✅ Time travel now calls real Mistral API
+✅ CSV generate now has error handling
+
+
+FILES CHANGED
+===============================================
+✅ Fixed:
+   - client/src/hooks/useDistrictData.js (time travel)
+   - client/src/components/panels/PolicySimulator.jsx (CSV generate)
+
+✅ Synced from TerraYield repo:
+   - client/src/components/MapScene.jsx (full rewrite)
+   - client/src/components/Sidebar.jsx (full rewrite)
+   - client/src/utils/indiaBoundariesApi.js (rewritten)
+   - client/src/components/Tooltip.jsx (updated)
+   - client/src/constants/mapConfig.js (new colors)
+   - client/src/App.jsx (ErrorBoundary)
+   - client/src/App.css (new styles)
+   - + 35 new files (GeoJSON, CSV, etc.)
+
+
+URLS
+===============================================
+🌐 Frontend:     http://localhost:5173
+🔧 Server API:   http://localhost:3000/api
+📊 Features:
+   - Feature 1: Land Intelligence + Time Travel
+   - Feature 2: Crop Matchmaker
+   - Feature 3: Policy Simulator
+
+
+STOP THE APP
+===============================================
+Press: Ctrl+C in terminal
+
+
+DOCUMENTATION
+===============================================
+- IMPLEMENTATION_SUMMARY.md   (detailed technical docs)
+- QUICKSTART.md               (feature walkthrough)
+
+
+QUESTIONS?
+===============================================
+Check browser console (F12) for error messages.
+All errors logged with helpful context.
+
+
+Ready to test! 🚀

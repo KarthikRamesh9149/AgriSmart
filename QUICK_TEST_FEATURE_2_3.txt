@@ -1,0 +1,246 @@
+================================================================================
+                    QUICK TEST GUIDE - FEATURE 2 & 3 IMPROVEMENTS
+================================================================================
+
+✅ ALL CODE IS READY - Just need to test it!
+
+================================================================================
+STEP 1: START DEV SERVER (Pick one method)
+================================================================================
+
+METHOD A: Automatic (Windows)
+  → Double-click: START_DEV_SERVER.bat
+
+METHOD B: Command Prompt
+  → Press Win+R
+  → Type: cmd
+  → Paste this:
+      cd "c:\Users\rames\OneDrive\Desktop\Mistral hackathon"
+      npm run dev
+
+METHOD C: PowerShell (Admin)
+  → Right-click PowerShell → Run as Administrator
+  → Paste this:
+      Stop-Process -Name node -Force -ErrorAction SilentlyContinue
+      cd "c:\Users\rames\OneDrive\Desktop\Mistral hackathon"
+      npm run dev
+
+WAIT FOR THESE MESSAGES:
+  ✅ "Server: listening on localhost:3000"
+  ✅ "Client: ready in XXXms at http://localhost:5173"
+
+================================================================================
+STEP 2: OPEN BROWSER
+================================================================================
+
+Go to: http://localhost:5173
+
+You should see:
+  - Map of India with colored hotspots
+  - Left sidebar with district list
+  - Can click any hotspot to open right panel
+
+================================================================================
+STEP 3: TEST FEATURE 2 (CropMatchmaker - Sustainability Threshold)
+================================================================================
+
+1. Click ANY HOTSPOT on the map (any colored dot)
+
+2. Right panel slides open → Click "🌾 Crop Match" tab
+
+3. You should see 3 CropCards displayed:
+   - #1 🥇 Pigeon Pea (or similar)
+   - #2 🥈 Another crop
+   - #3 🥉 Another crop
+
+4. IMPORTANT: Click on ANY crop card to EXPAND it
+   → Click anywhere on the card to toggle expand/collapse
+
+5. When EXPANDED, look for:
+
+   ✅ COLOUR-CODED SCORE at top:
+      - If score >= 70: Should be GREEN
+      - If score 40-69: Should be YELLOW
+      - If score < 40: Should be RED
+
+   ✅ SCORE BREAKDOWN section (when expanded):
+      - Water Efficiency: X pts
+      - Profit Potential: X pts
+      - Soil Match: X pts
+      - Drought Tolerance: X pts
+      - Min. for sustainability: 60 pts  ← NEW LINE (should be here!)
+
+6. SUCCESS CRITERIA:
+   ✅ Score number is colour-coded (not all white)
+   ✅ "Min. for sustainability: 60 pts" row appears in breakdown
+   ✅ Clear indication that crop is/isn't sustainable
+
+================================================================================
+STEP 4: TEST FEATURE 3 (PolicySimulator Modal)
+================================================================================
+
+1. SAME HOTSPOT → Click "📋 Policy Sim" tab
+
+2. You'll see UPLOAD SECTION:
+   - 📄 icon
+   - "Drag & drop CSV/XLSX or click to browse"
+   - "Browse Files" button
+
+3. UPLOAD A CSV FILE:
+   - Click "Browse Files" button
+   - Select ANY CSV or Excel file from your computer
+   - Wait for "✅ N Rows Loaded" message to appear
+
+4. After file uploaded, you'll see:
+   - ✅ Rows Loaded summary
+   - Various analysis sections (might be scrollable)
+
+5. Click "✨ Generate" button
+
+6. WAIT 2-3 SECONDS - Modal should POP UP in centre of screen
+   - Modal appears OVER the map (not in the side panel)
+   - Centre of screen, takes up ~90% of width
+   - Semi-transparent dark overlay behind it
+
+7. MODAL LAYOUT - You should see:
+
+   TOP:
+   ┌─────────────────────────────────────────┐
+   │ 🌾 Agricultural Policy Analysis     [×] │
+   └─────────────────────────────────────────┘
+
+   TWO SIDE-BY-SIDE PANELS:
+   ┌────────────────────┬────────────────────┐
+   │ GOVERNMENT'S       │ AI STRATEGY        │
+   │ STRATEGY           │                    │
+   │ (from your CSV)    │ (Mistral recom.)   │
+   │                    │                    │
+   │ Crop: [govt crop]  │ Crop: [AI crop]    │
+   │ Water: X L/kg      │ Water: X L/kg      │
+   │ Soil: [status]     │ ✅ Benefits        │
+   │                    │                    │
+   │ ⚠ Consequences:    │ ✅ Consequences:   │
+   │ - Water: X L/kg    │ - Water: X L/kg    │
+   │ - Soil: degraded   │ - Soil: fixation   │
+   │ - Aquifer at risk  │ - Drought tolerant │
+   └────────────────────┴────────────────────┘
+
+8. SCROLL DOWN in the modal:
+
+   You should see:
+   ┌─────────────────────────────────────────┐
+   │ 🌍 SOIL DEGRADATION STATUS             │
+   │ Current Status: severe                  │
+   │ Primary Driver: High water extraction   │
+   │ Recovery Timeline: 3-5 seasons          │
+   └─────────────────────────────────────────┘
+
+9. SCROLL DOWN MORE:
+
+   You should see GRAPH with 3 METRICS:
+   ┌─────────────────────────────────────────┐
+   │ 📊 SOIL HEALTH COMPARISON               │
+   │                                         │
+   │ Soil Impact Score                       │
+   │ Gov |████░░░░░░░░░| 20      (orange)    │
+   │ AI  |██████████░░░| 85      (green)     │
+   │                                         │
+   │ Water Efficiency                        │
+   │ Gov |░░░░░░░░░░░░░| 0       (orange)    │
+   │ AI  |██████████░░░| 90      (green)     │
+   │                                         │
+   │ Profit Potential                        │
+   │ Gov |████████░░░░░| 60      (orange)    │
+   │ AI  |██████████░░░| 100     (green)     │
+   └─────────────────────────────────────────┘
+
+   GREEN BOX AT BOTTOM:
+   "Switching to this crop enables biological
+    nitrogen fixation, which can recover organic
+    carbon by +0.1–0.3% over 3 seasons..."
+
+10. AT VERY BOTTOM:
+    - "📥 Export to PDF" button (orange/blue)
+    - "Close" button (gray)
+
+11. TEST CLOSING:
+    - Click "Close" button → Modal disappears
+    - Or click [×] button in header → Modal disappears
+    - Background map should be visible again
+
+12. SUCCESS CRITERIA:
+    ✅ Modal appears centred on screen
+    ✅ Two side-by-side panels visible
+    ✅ Left panel is orange-bordered, right is green-bordered
+    ✅ Can scroll down in modal to see full content
+    ✅ Soil degradation section visible
+    ✅ Graph with 3 metrics visible (gov bars orange, AI bars green)
+    ✅ Soil improvement statement visible and highlighted
+    ✅ Modal closes when clicking Close or [×]
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+PROBLEM: Modal doesn't appear after clicking Generate
+  → Check browser console (F12 → Console)
+  → Look for red errors
+  → Verify CSV was actually uploaded
+
+PROBLEM: Feature 2 score isn't colour-coded
+  → Hard refresh: Ctrl+Shift+R
+  → Score should be green/yellow/red in header
+  → Check "Min. for sustainability: 60 pts" row
+
+PROBLEM: Modal appears but no content shows
+  → Modal might not be scrollable
+  → Try scrolling down with mouse wheel
+  → Or check browser console for errors
+
+PROBLEM: Graph bars not showing
+  → Hard refresh browser: Ctrl+Shift+R
+  → Check if you can scroll down in modal
+  → CSS might not have loaded
+
+PROBLEM: PDF export fails
+  → Library html2pdf.js should already be available
+  → Check console for error messages
+  → PDF export is optional - main features are modal + graph
+
+================================================================================
+BROWSER CONSOLE CHECK (Optional but recommended)
+================================================================================
+
+1. Press F12 to open Developer Tools
+2. Click "Console" tab
+3. Look for messages:
+   ✅ Should see blue "Brief response: ..." message
+   ✅ Should NOT see any red error messages
+   ✅ Yellow warnings are OK
+
+If you see red errors:
+  - Note the error message
+  - That's what needs fixing
+
+================================================================================
+WHAT'S NEW
+================================================================================
+
+Feature 2:
+  ✨ Score is now colour-coded (green/yellow/red)
+  ✨ "Min. for sustainability: 60 pts" shows the threshold
+  ✨ Users understand if a crop is sustainable for their district
+
+Feature 3:
+  ✨ Modal pops up instead of dense side panel
+  ✨ Beautiful dual-panel layout (gov vs AI)
+  ✨ Comparison graph with 3 key metrics
+  ✨ Soil health improvement statement
+  ✨ Can export to PDF
+  ✨ Much better UX!
+
+================================================================================
+EXPECTED TOTAL TIME: 5 minutes
+================================================================================
+
+Ready? Start the dev server and test! 🚀

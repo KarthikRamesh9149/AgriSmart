@@ -1,0 +1,109 @@
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                    API KEY DIAGNOSIS — ROOT CAUSE FOUND!                        ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+ISSUE:
+════════════════════════════════════════════════════════════════════════════════
+Both time travel and CSV generate are using fallback mode because:
+
+  ALL 5 MISTRAL API KEYS ARE INVALID (401 Unauthorized)
+
+Test Results:
+  Feature 1: FAIL (401 Unauthorized)
+  Feature 2: FAIL (401 Unauthorized)
+  Feature 3: FAIL (401 Unauthorized)
+  Feature 4: FAIL (401 Unauthorized)
+  Feature 5: FAIL (401 Unauthorized)
+
+Keys in .env:
+  MISTRAL_FEATURE1_KEY=786EAE72-87C9-4C08-BEE8-CAEF3A9484C9 ❌ INVALID
+  MISTRAL_FEATURE2_KEY=D2CC0CCB-8847-4B02-97DF-1AD4002B1EFD ❌ INVALID
+  MISTRAL_FEATURE3_KEY=79F69647-2BB2-407C-950B-8648F2C173D4 ❌ INVALID
+  MISTRAL_FEATURE4_KEY=D394CC4A-995F-4140-9AB0-EB549C9519EE ❌ INVALID
+  MISTRAL_BRIEF_KEY=79F69647-2BB2-407C-950B-8648F2C173D4 ❌ INVALID
+
+
+POSSIBLE CAUSES:
+════════════════════════════════════════════════════════════════════════════════
+1. Keys are expired/deactivated
+2. Keys were revoked
+3. Keys belong to different organization
+4. API account has no credits
+5. Keys are in wrong format
+6. Mistral platform changed API key format
+
+
+WHAT'S HAPPENING NOW:
+════════════════════════════════════════════════════════════════════════════════
+✅ Time Travel: Works with FALLBACK (deterministic 3-4x variations)
+   - Shows different values per year (FIXED)
+   - Uses local stubs instead of Mistral
+
+✅ CSV Generate: Works with FALLBACK (graceful error handling)
+   - Shows fallback analysis message (FIXED)
+   - No 500 error
+   - Uses basic policy analysis instead of Mistral
+
+So the features ARE working, just not with Mistral AI.
+
+
+WHAT TO DO:
+════════════════════════════════════════════════════════════════════════════════
+
+OPTION 1: Use valid Mistral API keys (Recommended)
+─────────────────────────────────────────────────
+1. Log into Mistral AI: https://console.mistral.ai
+2. Go to API Keys section
+3. Create NEW API keys (if old ones are expired/revoked)
+4. Copy the keys to server/.env:
+   MISTRAL_FEATURE1_KEY=<new_key_here>
+   MISTRAL_FEATURE2_KEY=<new_key_here>
+   MISTRAL_FEATURE3_KEY=<new_key_here>
+   MISTRAL_FEATURE4_KEY=<new_key_here>
+   MISTRAL_BRIEF_KEY=<new_key_here>
+5. Restart dev server: npm run dev
+6. Run test again: python3 test_mistral_keys.py
+
+OR:
+
+OPTION 2: Keep using fallback mode (What you have now)
+──────────────────────────────────────────────────────
+✅ Time Travel: Works fine with fallback
+   - Shows 23°C (2000) → 26°C (current) → 29°C (2050)
+   - FIXED: Values are now clearly different
+
+✅ CSV Generate: Works fine with fallback
+   - Shows "Using fallback analysis mode" message
+   - FIXED: No 500 error, always responds
+
+Both features work correctly! Just not with Mistral AI.
+
+
+TESTING THE FIX:
+════════════════════════════════════════════════════════════════════════════════
+1. Restart dev server: npm run dev
+2. Test time travel slider → Values should change
+3. Test CSV generate → Should show analysis (fallback mode is OK)
+4. Verify NO 500 errors
+5. Verify NO freezing buttons
+
+
+SUMMARY:
+════════════════════════════════════════════════════════════════════════════════
+Problem:  All Mistral keys are invalid (401 errors)
+Result:   Features use fallback logic (still work, just no AI)
+Status:   Time travel VALUES CHANGE (fixed)
+          CSV GENERATE NO ERROR (fixed)
+
+Mistral API would be used IF keys were valid, but features work without it.
+
+
+NEXT STEPS:
+════════════════════════════════════════════════════════════════════════════════
+1. Check Mistral console for valid API keys
+2. Update .env with new keys
+3. Restart dev server
+4. Run test_mistral_keys.py again to verify
+5. If keys are valid, Mistral API will be used automatically
+
+OR just use the fallback mode (features work fine as-is).

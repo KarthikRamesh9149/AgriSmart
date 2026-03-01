@@ -121,7 +121,7 @@ function RightPanel({ districtId, onClose }) {
 
       {/* Panel Footer */}
       <div className="panel-footer">
-        <span className="iteration-badge">Agri Intelligence Dashboard</span>
+        <span className="iteration-badge">AgriSmart Dashboard</span>
       </div>
     </div>
   );

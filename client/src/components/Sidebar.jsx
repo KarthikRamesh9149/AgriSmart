@@ -77,8 +77,8 @@ function Sidebar({
   return (
     <div className="sidebar">
       <div className="sidebar-header">
-        <h1 className="sidebar-title">Agri Intelligence</h1>
-        <p className="sidebar-subtitle">Agricultural Insights for India</p>
+        <h1 className="sidebar-title">AgriSmart</h1>
+        <p className="sidebar-subtitle">Farming Meets AI</p>
       </div>
 
       {onDistrictSearchSelect && districts.length > 0 && (
@@ -171,7 +171,8 @@ function Sidebar({
       </div>
 
       <div className="sidebar-footer">
-        <p className="footer-text">Agri Intelligence Dashboard</p>
+        <p className="footer-text">AgriSmart Dashboard</p>
+        <p className="footer-subtext">Powered by Mistral AI</p>
       </div>
     </div>
   );

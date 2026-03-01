@@ -250,6 +250,12 @@ function PolicyModal({
         {/* Soil Health Comparison Graph */}
         <div className="policy-graph-section">
           <h3 className="graph-title">📊 Soil Health Comparison</h3>
+          <p className="policy-scores-legend">
+            <strong>Score Guide (0–100):</strong>
+            <br />🌱 <strong>Soil Impact:</strong> How well the crop restores soil health (nitrogen fixation, carbon building)
+            <br />💧 <strong>Water Efficiency:</strong> Lower water usage = higher score. Saves aquifer stress.
+            <br />💰 <strong>Profit Potential:</strong> Farmer earnings from the crop over one season
+          </p>
 
           <div className="graph-metric">
             <div className="graph-metric-label">Soil Impact Score</div>

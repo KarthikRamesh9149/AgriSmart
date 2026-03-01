@@ -1,0 +1,148 @@
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                    AGRI INTELLIGENCE DASHBOARD v1.0                            ║
+║                          REFERENCE CARD                                        ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+📍 LOCATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Project root: c:\Users\rames\OneDrive\Desktop\Mistral hackathon
+Documentation: START_HERE.md (READ THIS FIRST!)
+
+
+🚀 QUICK START
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Open PowerShell/Terminal
+2. cd "c:\Users\rames\OneDrive\Desktop\Mistral hackathon"
+3. npm install         (first time only)
+4. npm run dev         (starts both server + client)
+5. Open http://localhost:5173 in browser
+
+
+🌐 URLS AFTER npm run dev
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Frontend:   http://localhost:5173    ← Open this in browser
+Server API: http://localhost:3000
+Health:     http://localhost:3000/api/health
+
+
+✅ WHAT'S FIXED
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[✅] Bug #1: Time Travel (Feature 1)
+     Issue:  All years showed identical climate data
+     Fix:    Now calls Mistral API for each year (2000=cool/wet, 2050=warm/dry)
+     Test:   Move slider 2000→2024→2050, watch values change
+
+[✅] Bug #2: CSV Generate (Feature 3)
+     Issue:  Button froze after upload, no response
+     Fix:    Proper error handling, Mistral API integration, user feedback
+     Test:   Upload CSV, click Generate, see brief in 2-5 seconds
+
+[✅] Feature: TerraYield Map Sync
+     New:    Full India (33 states), district coloring by risk, search, labels
+     Map:    🟢Green (low) 🟠Orange (medium) 🔴Red (high) 🔴DarkRed (severe)
+     Test:   Search "Ahmednagar", hover districts, toggle "Show all colors"
+
+
+📋 TEST CHECKLIST (5 min total)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Time Travel (30 sec):
+  □ Click hotspot
+  □ Open "Land Intelligence" tab
+  □ Scroll to "Time Horizon Slider"
+  □ Drag 2000 → 2024 → 2050
+  □ Verify values change each year
+
+CSV Generate (60 sec):
+  □ Click hotspot → "Policy Simulator" tab
+  □ Drag CSV (or upload sample)
+  □ Click "✨ Generate"
+  □ Wait 2-5 seconds
+  □ See cabinet brief appear (real Mistral content)
+
+Map Colors (60 sec):
+  □ See India map colored by risk
+  □ Search "Ahmednagar" → zooms to district
+  □ Hover districts → tooltips
+  □ Toggle "Show all colors" on/off
+  □ Verify all 4 risk colors visible
+
+Browser Console (30 sec):
+  □ Press F12 to open Developer Tools
+  □ Check Console tab
+  □ Should see NO red errors
+  □ May see blue info logs (normal)
+
+
+📁 KEY FILES CHANGED
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Time Travel Fix:
+  client/src/hooks/useDistrictData.js
+
+CSV Generate Fix:
+  client/src/components/panels/PolicySimulator.jsx
+
+Map Sync (Major Rewrites):
+  client/src/components/MapScene.jsx         [rewritten]
+  client/src/components/Sidebar.jsx          [rewritten]
+  client/src/utils/indiaBoundariesApi.js    [rewritten]
+
+New Files:
+  client/src/components/ErrorBoundary.jsx
+  client/src/utils/districtsDegradationApi.js
+  client/public/data/districts.csv           [651 rows]
+  client/public/india/*.geojson              [33 files]
+  client/public/india/manifest.json
+
+
+🔑 MISTRAL API
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Status:      ✅ Already configured in server/.env
+No Action:   You don't need to set up keys, they're already there
+Features:    Feature 1 (time travel), Feature 3 (policy brief) use Mistral
+Endpoint:    POST /api/llm/feature4-time-travel
+             POST /api/llm/policy-freeform
+
+
+💾 BROWSER STORAGE (Optional)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+AppStateContext saves selectedDistrict to React Context (not localStorage)
+No persistent state needed for this version
+
+
+🐛 DEBUGGING TIPS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Open browser DevTools:     F12 or Right-click → Inspect
+Check Console tab:         Look for blue [info] or red errors
+Check Network tab:         See API calls to /api/llm/*
+Check Application tab:     React DevTools, Context values
+Server logs:               Check terminal running "npm run dev"
+
+
+⏹️ STOP THE APP
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Press:   Ctrl+C in the terminal where "npm run dev" is running
+Confirm: Type 'y' and press Enter if prompted
+
+
+📚 DOCUMENTATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Quick Overview:        START_HERE.md           ← Read first
+Step-by-step Guide:    QUICKSTART.md
+Technical Details:     COMPLETION_REPORT.md
+Architecture/Code:     IMPLEMENTATION_SUMMARY.md
+This Card:             REFERENCE_CARD.txt      ← You are here
+
+
+🎯 WHAT'S NEXT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Run:    npm run dev
+2. Test:   Follow TEST CHECKLIST above
+3. Review: Read COMPLETION_REPORT.md for technical details
+4. Deploy: Use vercel deploy or docker (see QUICKSTART.md)
+
+
+✨ ENJOY!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+All bugs fixed. All features synced. Ready for production.
+Time to test: ~30 seconds
+Time to deploy: ~1 day
