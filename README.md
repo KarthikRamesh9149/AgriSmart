@@ -253,12 +253,12 @@ MIT License - See LICENSE.md
 
 ### 🌟 Core Team
 
-| Name | Role |
+| Name | 
 |---|---|
-| **Karthik Ramesh** | Frontend Lead |
-| **Mannan Zaveri** | Full Stack |
-| **Vansh Kalra** | Backend Engineer |
-| **Shashwat Manish** | Product & Research |
+**Karthik Ramesh** 
+**Mannan Zaveri** 
+**Vansh Kalra** 
+**Shashwat Manish** 
 
 ---
 
