@@ -164,6 +164,29 @@ function MapScene() {
     }
   }, [setSelectedDistrict]);
 
+  // Handle boundary click - open right panel with district conversion
+  const handleBoundaryClick = useCallback((info) => {
+    if (info.object && info.object.properties) {
+      const p = info.object.properties;
+      const districtName = (p.Dist_Name || p.district || '').toLowerCase().replace(/\s+/g, '');
+      const stateName = (p.State_Name || p.state || '').toLowerCase();
+
+      // Map state names to their codes
+      const stateCodeMap = {
+        maharashtra: 'mh',
+        punjab: 'pb',
+        karnataka: 'ka',
+      };
+
+      const stateCode = stateCodeMap[stateName] || stateName.substring(0, 2);
+
+      if (districtName && stateCode) {
+        const districtId = `${districtName}_${stateCode}`;
+        setSelectedDistrict(districtId);
+      }
+    }
+  }, [setSelectedDistrict]);
+
   // Close the right panel
   const handleClosePanel = useCallback(() => {
     setSelectedDistrict(null);
@@ -248,6 +271,7 @@ function MapScene() {
           lineWidthMaxPixels: 6,
           pickable: true,
           onHover: handleBoundaryHover,
+          onClick: handleBoundaryClick,
           updateTriggers: {
             getFillColor: [showAllColors, hoveredBoundaryIndex, degradationLookup],
           },

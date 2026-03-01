@@ -134,10 +134,16 @@ export function useDistrictData(districtId, timeHorizon) {
               heat_days_per_year: heatDays + 28,
               label: 'Projection (2050)',
             };
-        setTimeTravelSnapshots({
+        const snapshots = {
           2000: baseline,
           [currentYear]: current,
           2050: projected,
+        };
+        setTimeTravelSnapshots(snapshots);
+        console.log('📊 Time Travel Snapshots Set:', {
+          districtId,
+          snapshots,
+          currentYear,
         });
       } catch (err) {
         if (cancelled) return;
@@ -198,6 +204,19 @@ export function useDistrictData(districtId, timeHorizon) {
     }
   }, [districtId, loadNarrative, loadCropWhyExplanation]);
 
+  // Get current snapshot or safe default
+  const getSnapshot = (year) => {
+    const snap = timeTravelSnapshots[year];
+    if (snap) return snap;
+    // Safe fallback - never undefined
+    return {
+      temp_celsius: 0,
+      rainfall_mm: 0,
+      heat_days_per_year: 0,
+      label: year.toString(),
+    };
+  };
+
   return {
     // Core data
     district,
@@ -211,9 +230,9 @@ export function useDistrictData(districtId, timeHorizon) {
     cropRecommendations,
     cropWhyExplanation: cropWhyExplanation?.why_explanation || null,
     cropWhyLoading,
-    timeTravelSnapshot: timeTravelSnapshots[timeHorizon] || null,
-    historicalSnapshot: timeTravelSnapshots[currentYear] || null,
-    projectedSnapshot: timeTravelSnapshots[2050] || null,
+    timeTravelSnapshot: getSnapshot(timeHorizon),
+    historicalSnapshot: getSnapshot(currentYear),
+    projectedSnapshot: getSnapshot(2050),
 
     // Overall state
     loading,
