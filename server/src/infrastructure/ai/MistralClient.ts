@@ -13,6 +13,7 @@ export interface MistralConfig {
   feature1: { key?: string; model: string };
   feature2: { key?: string; model: string };
   feature3: { key?: string; model: string };
+  feature4: { key?: string; model: string };
   brief: { key?: string; model: string };
 }
 
@@ -48,7 +49,7 @@ export interface MistralResponse {
   };
 }
 
-export type FeatureKey = 'feature1' | 'feature2' | 'feature3' | 'brief';
+export type FeatureKey = 'feature1' | 'feature2' | 'feature3' | 'feature4' | 'brief';
 
 export class MistralClient {
   private readonly config: MistralConfig;

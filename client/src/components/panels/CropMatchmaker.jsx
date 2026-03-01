@@ -28,13 +28,32 @@ function CropMatchmaker({
     setExpandedCrop(expandedCrop === cropId ? null : cropId);
   };
 
-  // Parse markdown-style explanation into bullet points
+  const sanitizeText = (text) =>
+    text
+      .replace(/\*\*/g, '')
+      .replace(/`/g, '')
+      .replace(/\[(.*?)\]\((.*?)\)/g, '$1')
+      .trim();
+
+  // Parse markdown-style explanation into structured bullets
   const parseExplanation = (text) => {
     if (!text) return [];
-    return text
+    return sanitizeText(text)
       .split('\n')
-      .filter((line) => line.trim().startsWith('•') || line.trim().startsWith('*'))
-      .map((line) => line.replace(/^[•*]\s*\*?\*?/, '').replace(/\*?\*?$/, '').trim());
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0)
+      .filter((line) => line.startsWith('•') || line.startsWith('-') || line.startsWith('*'))
+      .map((line) => line.replace(/^[•*-]\s*/, '').trim())
+      .map((line) => {
+        const parts = line.split(':');
+        if (parts.length > 1) {
+          return {
+            title: parts.shift().trim(),
+            body: parts.join(':').trim(),
+          };
+        }
+        return { title: '', body: line };
+      });
   };
 
   const explanationBullets = parseExplanation(cropWhyExplanation);
@@ -189,11 +208,14 @@ function CropMatchmaker({
           ) : explanationBullets.length > 0 ? (
             <ul className="why-bullets">
               {explanationBullets.map((bullet, i) => (
-                <li key={i}>{bullet}</li>
+                <li key={i}>
+                  {bullet.title && <span className="why-bullet-title">{bullet.title}</span>}
+                  <span className="why-bullet-body">{bullet.body}</span>
+                </li>
               ))}
             </ul>
           ) : cropWhyExplanation ? (
-            <p className="why-text">{cropWhyExplanation}</p>
+            <p className="why-text">{sanitizeText(cropWhyExplanation)}</p>
           ) : (
             <p className="placeholder-text">Click refresh to generate AI explanation</p>
           )}

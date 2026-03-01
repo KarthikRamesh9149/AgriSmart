@@ -8,9 +8,11 @@ import { useDistrictData } from '../hooks/useDistrictData';
 import LandIntelligence from './panels/LandIntelligence';
 import CropMatchmaker from './panels/CropMatchmaker';
 import PolicySimulator from './panels/PolicySimulator';
+import { useAppState } from '../context/AppStateContext';
 
 function RightPanel({ districtId, onClose }) {
   const [activeTab, setActiveTab] = useState('land');
+  const { timeHorizon, setTimeHorizon } = useAppState();
 
   const {
     district,
@@ -24,7 +26,12 @@ function RightPanel({ districtId, onClose }) {
     error,
     refreshNarrative,
     refreshCropWhy,
-  } = useDistrictData(districtId);
+    timeTravelSnapshot,
+    historicalSnapshot,
+    projectedSnapshot,
+    timeTravelLoading,
+    refreshTimeTravelSnapshot,
+  } = useDistrictData(districtId, timeHorizon);
 
   if (!districtId) return null;
 
@@ -84,6 +91,13 @@ function RightPanel({ districtId, onClose }) {
                 narrative={narrative}
                 narrativeLoading={narrativeLoading}
                 onRefresh={refreshNarrative}
+                timeHorizon={timeHorizon}
+                onTimeHorizonChange={setTimeHorizon}
+                timeTravelSnapshot={timeTravelSnapshot}
+                historicalSnapshot={historicalSnapshot}
+                projectedSnapshot={projectedSnapshot}
+                timeTravelLoading={timeTravelLoading}
+                onRefreshTimeTravel={refreshTimeTravelSnapshot}
               />
             )}
             {activeTab === 'crop' && (
@@ -95,7 +109,11 @@ function RightPanel({ districtId, onClose }) {
               />
             )}
             {activeTab === 'policy' && (
-              <PolicySimulator districtId={districtId} />
+              <PolicySimulator
+                districtId={districtId}
+                districtData={district}
+                cropRecommendations={cropRecommendations}
+              />
             )}
           </>
         )}
@@ -103,7 +121,7 @@ function RightPanel({ districtId, onClose }) {
 
       {/* Panel Footer */}
       <div className="panel-footer">
-        <span className="iteration-badge">Iteration 4 - Policy Simulator</span>
+        <span className="iteration-badge">Agri Intelligence Dashboard</span>
       </div>
     </div>
   );

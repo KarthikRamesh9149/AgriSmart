@@ -20,6 +20,10 @@ const configSchema = z.object({
       key: z.string().optional(),
       model: z.string().default('mistral-large-latest'),
     }),
+    feature4: z.object({
+      key: z.string().optional(),
+      model: z.string().default('mistral-large-latest'),
+    }),
     brief: z.object({
       key: z.string().optional(),
       model: z.string().default('mistral-medium-latest'),
@@ -45,6 +49,10 @@ const rawConfig = {
     feature3: {
       key: process.env.MISTRAL_FEATURE3_KEY,
       model: process.env.MISTRAL_FEATURE3_MODEL,
+    },
+    feature4: {
+      key: process.env.MISTRAL_FEATURE4_KEY,
+      model: process.env.MISTRAL_FEATURE4_MODEL,
     },
     brief: {
       key: process.env.MISTRAL_BRIEF_KEY,
