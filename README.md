@@ -1,4 +1,4 @@
-# 🌾 AgriSmart: Farming Meets AI
+# 🌾 AgriSmart
 
 > **Powered by Mistral AI** | Helping Indian Farmers Make Smarter Climate Decisions
 
