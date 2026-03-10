@@ -1,287 +1,122 @@
 # 🌾 AgriSmart: Farming Meets AI
 
-> **Powered by Mistral AI** | Building Sustainable Agriculture Through Intelligent Climate Analysis
+> **Powered by Mistral AI** | Helping Indian Farmers Make Smarter Climate Decisions
 
 ---
 
-## 🎯 Overview
+## 🎯 What is AgriSmart?
 
-**AgriSmart** is a cutting-edge agricultural intelligence platform combining climate science, AI-powered recommendations, and policy simulation to help Indian farmers make data-driven decisions in the face of climate change.
+**AgriSmart** gives Indian farmers the tools to understand climate change and make better farming decisions. Using AI, we show you:
 
-Using **Mistral AI** for intelligent analysis, AgriSmart provides:
-- 📊 **Dynamic Health Scores** that change with climate projections
-- 🌾 **AI-Powered Crop Recommendations** tailored to districts
-- 🏛️ **Policy Simulation Engine** comparing strategies
-- 🔮 **Time Travel Climate Insights** past → present → future
-
----
-
-## ✨ Key Features
-
-### 1. 🗺️ Interactive Climate Map
-- District boundary visualization with risk coloring
-- Hotspot layers for Soil & Yield analysis
-- Click any district to open Digital Twin panel
-- Search across 31 Indian states
-
-### 2. 🧬 Digital Twin Health Scores
-
-**Scores that CHANGE with time horizon:**
-
-```
-Mandya District:
-Year 2000: Soil 85, Water 80, Climate 95, Crop 78 (Good)
-Year 2026: Soil 72, Water 65, Climate 80, Crop 70 (Fair)
-Year 2050: Soil 54, Water 35, Climate 48, Crop 40 (Warning)
-```
-
-### 3. 🌍 Time Travel Climate Simulator
-
-**4 Districts, 50-year timeline:**
-
-- **Ahmednagar:** 42.2°C → 48.5°C (+6.3°C)
-- **Yavatmal:** 43.2°C → 49.5°C
-- **Bathinda:** 44.2°C → 50.5°C
-- **Mandya:** 41.2°C → 47.5°C
-
-### 4. 🌾 AI Crop Matchmaker
-- Top 3 crop recommendations
-- Companion planting suggestions
-- Mistral AI explanations
-- Economics breakdown
-
-### 5. 🏛️ Policy Simulator
-- CSV upload & analysis
-- Gov vs AI strategy comparison
-- Cabinet brief generation
-- Feasibility scoring
+- 📊 **How your district will change** over time (past, present, future)
+- 🌾 **Which crops grow best** in your conditions
+- 🏛️ **Which government schemes** work for your farm
+- 🗺️ **See everything on an interactive map** of India
 
 ---
 
-## 🏗️ Architecture
+## ✨ Features
 
-```
-Frontend: React 18 + Vite + MapLibre + Deck.gl
-Backend: Node.js + Mistral AI
-Data: GeoJSON + District JSON + Crop Database
-```
+### 1. 🗺️ Find Your District
+Click on any district in India to see what's happening there. Search for your area and explore instantly.
 
-### Key Components
-```
-src/components/
-├─ MapScene.jsx (Main container)
-├─ RightPanel.jsx (Tabbed interface)
-├─ panels/
-│  ├─ LandIntelligence.jsx (Feature 1)
-│  ├─ CropMatchmaker.jsx (Feature 2)
-│  └─ PolicySimulator.jsx (Feature 3)
-└─ charts/ (Visualizations)
-```
+### 2. 📊 See Your Health Scores
+Get 5 easy-to-understand scores:
+- **Soil Health:** How good is your soil?
+- **Water Available:** Do you have enough water?
+- **Climate Fitness:** Is the climate suitable?
+- **Crop Viability:** Can your crops survive?
+- **Overall Score:** Simple good/fair/warning label
 
----
+**Example:** Mandya district shows how conditions change from 2000 → 2026 → 2050
 
-## 💡 Technical Highlights
+### 3. 🌍 Time Travel Through Climate
+Slide through 50 years to see:
+- What the climate WAS (year 2000)
+- What it is NOW (2026)
+- What it WILL BE (2050 projection)
 
-### Dynamic Score Calculation
-```javascript
-Soil = (rainfall/1000 * 40) + (100 - heat_days*1.5)*0.6
-Water = (100 - temp*1.2)*0.5 + (rainfall/1000)*50
-Climate = 100 - ((temp-35)*5) - (heat_days*0.5)
-Crop = (rainfall>700?70:rainfall*0.1) + (temp<45?30:(45-temp)*5)
-Overall = Average of all four
-```
+Watch your scores change as you move through time. See the real impact of climate change on your farm.
 
-### Hardcoded Climate Data
-- **2000:** Historical records
-- **2050:** IPCC AR6 projections
-- **2026:** Current measurements
-- **Science-backed:** IMD + ICRISAT verified
+### 4. 🌾 Get Crop Recommendations
+AI suggests the **top 3 best crops** for your district:
+- ✅ Why each crop fits your conditions
+- ✅ What other crops pair well together
+- ✅ Expected profit from each crop
+- ✅ Simple explanations from AI
 
-### Mistral AI Integration
-- Feature 1: Narratives from scores
-- Feature 2: "Why this fits" crop explanations
-- Feature 3: Cabinet briefs & policy optimization
+### 5. 🏛️ Compare Government Schemes
+Upload a CSV of government programs:
+- See if they match YOUR farm conditions
+- Compare Government advice vs AI recommendation
+- Get an instant report for officials
+- Find the best strategy for your area
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Get Started
+
+**Requirements:** Just a web browser
 
 ```bash
-# Install
+# For developers
 npm install
-
-# Run
 npm run dev
-
-# Build
-npm run build
 ```
 
-Access at `http://localhost:5173`
+Then open **http://localhost:5173** in your browser.
 
 ---
 
-## 📊 Performance Metrics
+## 📱 How to Use (Farmer Perspective)
 
-- ⚡ Map loads in <2s
-- 🔄 District change: <500ms
-- 📊 Scores recalculate: <100ms
-- 🌾 Recommendations: <1.5s
-
----
-
-## 📈 Coverage
-
-- 🗺️ 31 Indian states
-- 🏛️ 640+ districts
-- 🌾 50+ crops
-- 🔗 Companion planting matrix
+1. **Open the map** → You see all of India
+2. **Click your district** → Right panel opens instantly
+3. **See your scores** → Understand your farm conditions
+4. **Move the slider** → Watch how climate changes over 50 years
+5. **Check crop suggestions** → See what grows best
+6. **Explore policies** → Find schemes that work for you
 
 ---
 
-## 🧪 Testing
+## 🌍 Coverage
 
-```bash
-npm run test
-```
-
-**Coverage:**
-- ✅ Domain layer calculations
-- ✅ Climate transformations
-- ✅ Crop ranking algorithms
-- ✅ Slider functionality
-- ✅ Score recalculation
-- ✅ Policy analysis
+- ✅ Works across **31 Indian states**
+- ✅ Shows data for **640+ districts**
+- ✅ Recommends **50+ different crops**
+- ✅ Connects crops with **companion planting guides**
 
 ---
 
-## 🎨 Design
+## 🎨 Clean & Simple Design
 
-**Dark Theme (#0d1117):**
-- Clean, modern aesthetics
-- High contrast (>4.5:1 ratio)
-- Responsive across devices
-- Blue accent (#3b82f6)
-
----
-
-## 🐛 Known Limitations
-
-- Climate data for 4 districts (extensible)
-- Tablet-optimized UI (mobile coming)
-- No authentication (planned)
-- PDF export only (CSV planned)
+- Dark theme that's easy on the eyes
+- Works great on computers and tablets
+- Click-friendly buttons for touch screens
+- Colors show risk at a glance (green = good, yellow = watch, red = warning)
 
 ---
 
-## 🚀 Future Roadmap
+## 🚀 Future Plans
 
-- 🤖 Real-time weather integration
-- 👨‍🌾 Multi-farm dashboard
-- 📱 Native mobile apps
-- 🌐 Multi-language (Hindi, Marathi, Tamil)
-- 🔔 Climate event alerts
-- 📊 Yield prediction
-- 🌍 All 640+ districts
-
----
-
-## 📚 API Endpoints
-
-```
-GET  /api/health
-GET  /api/hotspots?issue=soil|yield
-GET  /api/districts/:district_id
-POST /api/llm/feature1-narrative
-POST /api/llm/feature2-why
-POST /api/llm/feature3-brief
-```
+- 📱 Mobile app for farmers
+- 🤖 Real-time weather alerts
+- 🌐 Available in Hindi, Marathi, Tamil
+- 📊 Predict your next harvest
+- 🚨 Alert when climate gets risky
+- 👨‍🌾 Track multiple farms at once
 
 ---
 
-## 🤝 Contributing
-
-1. Fork repository
-2. Create feature branch
-3. Commit changes
-4. Push & open PR
-
-**Code Style:**
-- ESLint + Prettier
-- React best practices
-- Clean architecture
-- Descriptive names
-
----
-
-## 📄 License
-
-MIT License - See LICENSE.md
-
----
-
-## 🙏 Acknowledgments
-
-- **Mistral AI:** AI intelligence
-- **ICRISAT:** Crop expertise
-- **IMD:** Climate data
-- **Farmers:** Real-world insights
-
----
-
-## 📞 Support
-
-📧 support@agrismart.ai  
-🐛 GitHub Issues  
-💬 Discord Community  
-📱 @AgriSmartAI
-
----
-
-## 🏆 Hackathon Details
+## 🏆 Built for Hackathon
 
 - **Event:** Mistral AI Hackathon
 - **Duration:** 48 hours
-- **Team:** 4 developers
-- **Tech:** React + Node.js + Mistral AI
-- **Focus:** Climate-aware farming intelligence
-- **Impact:** 1000s of Indian farmers
+- **Built by:** 4 passionate developers
+- **Powered by:** Mistral AI
+- **Goal:** Help 145 million Indian farmers
 
 ---
-
-## 👥 Built By
-
-### 🌟 Core Team
-
-| Name | Role |
-|---|---|
-| **Karthik Ramesh** | Frontend Lead |
-| **Mannan Zaveri** | Full Stack |
-| **Vansh Kalra** | Backend Engineer |
-| **Shashwat Manish** | Product & Research |
-
----
-
-## 📊 Project Stats
-
-- 📝 **Lines of Code:** 8,500+
-- 🎯 **Components:** 25+
-- 📦 **Dependencies:** 42
-- ⚡ **Build Time:** 3s
-- 🚀 **Bundle:** 450KB (gzipped)
-
----
-
-## 🔮 Vision
-
-> **AgriSmart** empowers every Indian farmer with:
-> - 🧠 AI climate intelligence
-> - 🌾 Smart crop recommendations
-> - 💰 Data-driven planning
-> - 🌍 Sustainable practices
-> - 🤝 Science-backed policies
->
-> **Climate-aware farming saves lives, livelihoods, and the planet.**
 
 ---
 
@@ -300,11 +135,5 @@ Powered by **Mistral AI** | Built for India's Farmers
 **Karthik Ramesh** • **Mannan Zaveri** • **Vansh Kalra** • **Shashwat Manish**
 
 *Mistral AI Hackathon, 2026*
-
----
-
-**Version:** 1.0.0  
-**Status:** ✅ Production Ready  
-**Last Updated:** March 1, 2026
 
 </div>
