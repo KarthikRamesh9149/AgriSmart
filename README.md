@@ -101,21 +101,18 @@ Then open **http://localhost:5173** in your browser.
 
 - 📱 Mobile app for farmers
 - 🤖 Real-time weather alerts
-- 🌐 Available in Hindi, Marathi, Tamil
+- 🌐 Available in local languages
 - 📊 Predict your next harvest
 - 🚨 Alert when climate gets risky
 - 👨‍🌾 Track multiple farms at once
 
 ---
 
-## 🏆 Built for Hackathon
+## 🏆 Built for Mistral AI Hackathon
 
 - **Event:** Mistral AI Hackathon
 - **Duration:** 48 hours
-- **Built by:** 4 passionate developers
-- **Powered by:** Mistral AI
-- **Goal:** Help 145 million Indian farmers
-
+- **Built by:** Karthik Ramesh , Mannan Zaveri , Vansh Kalra and Shashwat Manish
 ---
 
 ---
@@ -130,7 +127,7 @@ Powered by **Mistral AI** | Built for India's Farmers
 
 ---
 
-### Made with ❤️ by
+### Made by
 
 **Karthik Ramesh** • **Mannan Zaveri** • **Vansh Kalra** • **Shashwat Manish**
 
