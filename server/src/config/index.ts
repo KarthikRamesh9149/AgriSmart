@@ -7,6 +7,15 @@ const configSchema = z.object({
   port: z.coerce.number().default(8787),
   nodeEnv: z.enum(['development', 'production', 'test']).default('development'),
   logLevel: z.enum(['trace', 'debug', 'info', 'warn', 'error', 'fatal']).default('info'),
+  clientOrigins: z
+    .string()
+    .optional()
+    .transform((value) =>
+      (value ?? '')
+        .split(',')
+        .map((origin) => origin.trim())
+        .filter(Boolean)
+    ),
   mistral: z.object({
     feature1: z.object({
       key: z.string().optional(),
@@ -37,6 +46,7 @@ const rawConfig = {
   port: process.env.PORT,
   nodeEnv: process.env.NODE_ENV,
   logLevel: process.env.LOG_LEVEL,
+  clientOrigins: process.env.CLIENT_ORIGINS,
   mistral: {
     feature1: {
       key: process.env.MISTRAL_FEATURE1_KEY,

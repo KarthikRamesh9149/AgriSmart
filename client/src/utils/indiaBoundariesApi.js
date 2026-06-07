@@ -115,7 +115,7 @@ export function buildDistrictLabels(fc) {
  * @returns {Promise<GeoJSON.FeatureCollection>}
  */
 export async function fetchAllIndiaBoundaries() {
-  let slugs = [];
+  let slugs;
   try {
     slugs = await getStateList();
   } catch (err) {

@@ -7,23 +7,24 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint src --ext .js,.jsx",
+    "lint": "eslint src",
     "test": "vitest run"
   },
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
     "@deck.gl/core": "^9.0.1",
     "@deck.gl/layers": "^9.0.1",
     "@deck.gl/react": "^9.0.1",
+    "html2pdf.js": "^0.14.0",
     "maplibre-gl": "^4.0.0",
+    "papaparse": "^5.5.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "react-map-gl": "^7.1.7",
-    "xlsx": "^0.18.5",
-    "html2pdf.js": "^0.10.1"
+    "read-excel-file": "^9.0.10"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^4.2.1",
-    "vite": "^5.0.12",
-    "vitest": "^1.2.0"
+    "@vitejs/plugin-react": "^6.0.2",
+    "vite": "^8.0.16",
+    "vitest": "^4.1.8"
   }
 }

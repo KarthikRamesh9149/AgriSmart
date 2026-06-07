@@ -7,7 +7,6 @@ import TimeTravelSlider from '../DistrictPanel/Feature1/TimeTravelSlider';
 import ScoreBar from '../ui/ScoreBar';
 import SoilDegradationChart from '../charts/SoilDegradationChart';
 import YieldTrendChart from '../charts/YieldTrendChart';
-import { selectClimateSnapshot } from '../../domain/feature1/timeHorizon';
 import { computeClimateDriftScore } from '../../domain/feature1/scoring';
 
 function getHorizonLabel(timeHorizon, currentYear) {
@@ -18,15 +17,11 @@ function getHorizonLabel(timeHorizon, currentYear) {
 
 function LandIntelligence({
   district,
-  scores,
   narrative,
   narrativeLoading,
   onRefresh,
   timeHorizon,
   onTimeHorizonChange,
-  timeTravelSnapshot,
-  historicalSnapshot,
-  projectedSnapshot,
   timeTravelLoading,
   onRefreshTimeTravel,
 }) {

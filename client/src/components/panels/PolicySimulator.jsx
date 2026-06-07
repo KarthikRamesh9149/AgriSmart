@@ -196,12 +196,6 @@ function PolicySimulator({ districtId, districtData, cropRecommendations }) {
     setBriefLoading(true);
     try {
       if (USE_REAL_API) {
-        console.log('Generating brief via /api/llm/policy-freeform with', {
-          district_id: targetDistrict,
-          file_name: fileName,
-          row_count: parseMeta.rowCount,
-        });
-
         const res = await fetch('/api/llm/policy-freeform', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -220,7 +214,6 @@ function PolicySimulator({ districtId, districtData, cropRecommendations }) {
         }
 
         const data = await res.json();
-        console.log('Brief response:', data);
         const briefText = data.analysis || data.cabinet_brief || data.narrative || '';
         setCabinetBrief(briefText);
         if (briefText) setShowModal(true);
@@ -334,7 +327,7 @@ function PolicySimulator({ districtId, districtData, cropRecommendations }) {
           <input
             ref={fileInputRef}
             type="file"
-            accept=".csv,.xlsx,.xls"
+            accept=".csv,.xlsx"
             onChange={onFileChange}
             style={{ display: 'none' }}
           />

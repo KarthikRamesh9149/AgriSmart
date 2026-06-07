@@ -61,7 +61,7 @@ export function getGeometryCentroid(geometry) {
     case 'Polygon':
       return getPolygonCentroid(geometry.coordinates);
 
-    case 'MultiPolygon':
+    case 'MultiPolygon': {
       // Find the largest polygon and use its centroid
       let maxArea = 0;
       let centroid = [0, 0];
@@ -80,6 +80,7 @@ export function getGeometryCentroid(geometry) {
         }
       }
       return centroid;
+    }
 
     default:
       return [0, 0];
