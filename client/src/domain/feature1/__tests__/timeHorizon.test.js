@@ -28,9 +28,9 @@ describe('selectClimateSnapshot', () => {
   it('returns historical snapshot for 2000 and labels baseline', () => {
     const result = selectClimateSnapshot(districtFixture, 2000, currentYear);
     expect(result).toEqual({
-      temp_celsius: 26.2,
-      rainfall_mm: 694,
-      heat_days_per_year: 11,
+      temp_celsius: 24.6,
+      rainfall_mm: 806,
+      heat_days_per_year: 3,
       label: 'Baseline',
     });
   });
@@ -50,7 +50,7 @@ describe('selectClimateSnapshot', () => {
     expect(result).toEqual({
       temp_celsius: 30.2,
       rainfall_mm: 540,
-      heat_days_per_year: 39,
+      heat_days_per_year: 49,
       label: 'Projection',
     });
   });

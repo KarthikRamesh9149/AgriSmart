@@ -33,7 +33,6 @@ function getDistrictIdFromFeature(feature) {
 function Sidebar({
   selectedIssue,
   onIssueChange,
-  selectedDistrict,
   onDistrictSelect,
   districts = [],
   onDistrictSearchSelect,
