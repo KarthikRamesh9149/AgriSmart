@@ -309,6 +309,7 @@ function MapScene() {
     degradationLookup,
     getDegradationColor,
     getHotspotColor,
+    handleBoundaryClick,
     handleBoundaryHover,
     handleHotspotHover,
     handleHotspotClick,

@@ -32,9 +32,12 @@ export async function buildApp(): Promise<FastifyInstance> {
 
   // Register CORS (environment-aware)
   await fastify.register(cors, {
-    origin: process.env.NODE_ENV === 'production'
-      ? ['https://yourdomain.com']
-      : true,
+    origin:
+      config.nodeEnv === 'production'
+        ? config.clientOrigins
+        : config.clientOrigins.length > 0
+          ? config.clientOrigins
+          : true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID'],
     exposedHeaders: ['X-Request-ID'],

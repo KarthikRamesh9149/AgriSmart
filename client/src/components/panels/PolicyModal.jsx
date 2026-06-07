@@ -13,10 +13,8 @@ function PolicyModal({
   cropRecommendations,
   cabinetBrief,
   redFlags,
-  arbitrage,
   structuredRows,
   fileName,
-  parseMeta,
   validRows,
 }) {
   if (!isOpen) return null;

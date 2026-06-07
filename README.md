@@ -1,136 +1,91 @@
-# 🌾 AgriSmart
+# AgriSmart
 
-> **Powered by Mistral AI** | Helping Indian Farmers Make Smarter Climate Decisions
+AgriSmart is a full-stack agricultural intelligence dashboard for Indian districts. The app combines map-based district exploration, crop recommendations, policy analysis, and Mistral-powered explanations for climate-aware farming decisions.
 
----
+## Stack
 
-## 🎯 What is AgriSmart?
+- Client: React 18, Vite, Deck.gl, MapLibre GL, Vitest
+- Server: Node.js, Fastify, TypeScript, Zod, Pino, Vitest
+- Workspace: npm workspaces with separate `client` and `server` packages
 
-**AgriSmart** gives Indian farmers the tools to understand climate change and make better farming decisions. Using AI, we show you:
+## Requirements
 
-- 📊 **How your district will change** over time (past, present, future)
-- 🌾 **Which crops grow best** in your conditions
-- 🏛️ **Which government schemes** work for your farm
-- 🗺️ **See everything on an interactive map** of India
+- Node.js 20.19 or newer
+- npm 11 or newer
 
----
+The expected Node version is recorded in `.nvmrc`.
 
-## ✨ Features
-
-### 1. 🗺️ Find Your District
-Click on any district in India to see what's happening there. Search for your area and explore instantly.
-
-### 2. 📊 See Your Health Scores
-Get 5 easy-to-understand scores:
-- **Soil Health:** How good is your soil?
-- **Water Available:** Do you have enough water?
-- **Climate Fitness:** Is the climate suitable?
-- **Crop Viability:** Can your crops survive?
-- **Overall Score:** Simple good/fair/warning label
-
-**Example:** Mandya district shows how conditions change from 2000 → 2026 → 2050
-
-### 3. 🌍 Time Travel Through Climate
-Slide through 50 years to see:
-- What the climate WAS (year 2000)
-- What it is NOW (2026)
-- What it WILL BE (2050 projection)
-
-Watch your scores change as you move through time. See the real impact of climate change on your farm.
-
-### 4. 🌾 Get Crop Recommendations
-AI suggests the **top 3 best crops** for your district:
-- ✅ Why each crop fits your conditions
-- ✅ What other crops pair well together
-- ✅ Expected profit from each crop
-- ✅ Simple explanations from AI
-
-### 5. 🏛️ Compare Government Schemes
-Upload a CSV of government programs:
-- See if they match YOUR farm conditions
-- Compare Government advice vs AI recommendation
-- Get an instant report for officials
-- Find the best strategy for your area
-
----
-
-## 🚀 Get Started
-
-**Requirements:** Just a web browser
+## Setup
 
 ```bash
-# For developers
 npm install
+cp .env.example .env
 npm run dev
 ```
 
-Then open **http://localhost:5173** in your browser.
+Open `http://localhost:5173`. The Vite dev server proxies `/api` requests to the Fastify server on `http://localhost:8787`.
 
----
+## Environment
 
-## 📱 How to Use (Farmer Perspective)
+Server-side configuration is loaded from `.env`.
 
-1. **Open the map** → You see all of India
-2. **Click your district** → Right panel opens instantly
-3. **See your scores** → Understand your farm conditions
-4. **Move the slider** → Watch how climate changes over 50 years
-5. **Check crop suggestions** → See what grows best
-6. **Explore policies** → Find schemes that work for you
+```bash
+PORT=8787
+NODE_ENV=development
+LOG_LEVEL=debug
+CLIENT_ORIGINS=http://localhost:5173
 
----
+MISTRAL_FEATURE1_KEY=
+MISTRAL_FEATURE1_MODEL=mistral-small-latest
+MISTRAL_FEATURE2_KEY=
+MISTRAL_FEATURE2_MODEL=mistral-small-latest
+MISTRAL_FEATURE3_KEY=
+MISTRAL_FEATURE3_MODEL=mistral-large-latest
+MISTRAL_FEATURE4_KEY=
+MISTRAL_FEATURE4_MODEL=mistral-large-latest
+MISTRAL_BRIEF_KEY=
+MISTRAL_BRIEF_MODEL=mistral-medium-latest
+```
 
-## 🌍 Coverage
+For production, set `CLIENT_ORIGINS` to the allowed browser origins as a comma-separated list.
 
-- ✅ Works across **31 Indian states**
-- ✅ Shows data for **640+ districts**
-- ✅ Recommends **50+ different crops**
-- ✅ Connects crops with **companion planting guides**
+## Scripts
 
----
+```bash
+npm run dev       # run client and server together
+npm run lint      # run ESLint across client and server sources
+npm test          # run all workspace tests
+npm run build     # compile server and build client assets
+npm run audit     # run npm audit
+npm run ci        # lint, test, and build
+npm run clean     # remove installed dependencies and build outputs
+```
 
-## 🎨 Clean & Simple Design
+Workspace-specific commands are also available:
 
-- Dark theme that's easy on the eyes
-- Works great on computers and tablets
-- Click-friendly buttons for touch screens
-- Colors show risk at a glance (green = good, yellow = watch, red = warning)
+```bash
+npm run dev --workspace=client
+npm run dev --workspace=server
+npm test --workspace=client
+npm test --workspace=server
+```
 
----
+## Features
 
-## 🚀 Future Plans
+- District map exploration across India
+- Land health, water, climate, crop viability, and overall district scores
+- Time horizon snapshots for baseline, current, and projected climate conditions
+- Crop recommendations with companion planting context
+- Policy CSV/XLSX upload, deterministic checks for structured schemas, and AI-generated cabinet briefs
+- PDF export for policy briefs
 
-- 📱 Mobile app for farmers
-- 🤖 Real-time weather alerts
-- 🌐 Available in local languages
-- 📊 Predict your next harvest
-- 🚨 Alert when climate gets risky
-- 👨‍🌾 Track multiple farms at once
+## Data And Security Notes
 
----
+- Mistral API keys are server-side only and must not be exposed to the client bundle.
+- Local `.env` files are ignored by git. Keep `.env.example` free of secrets.
+- Policy uploads are parsed in the browser and sent to the server only when generating AI analysis.
+- XLSX parsing uses a maintained reader package instead of the deprecated vulnerable `xlsx` package.
 
-## 🏆 Built for Mistral AI Hackathon
+## CI
 
-- **Event:** Mistral AI Hackathon
-- **Duration:** 48 hours
-- **Built by:** Karthik Ramesh , Mannan Zaveri , Vansh Kalra and Shashwat Manish
----
-
----
-
-<div align="center">
-
-## 🌱 Growing Together. Farming Smarter.
-
-**AgriSmart: Farming Meets AI**
-
-Powered by **Mistral AI** | Built for India's Farmers
-
----
-
-### Made by
-
-**Karthik Ramesh** • **Mannan Zaveri** • **Vansh Kalra** • **Shashwat Manish**
-
-*Mistral AI Hackathon, 2026*
-
-</div>
+GitHub Actions runs `npm ci` and `npm run ci` for pushes and pull requests targeting `main`.

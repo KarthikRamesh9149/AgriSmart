@@ -140,11 +140,6 @@ export function useDistrictData(districtId, timeHorizon) {
           2050: projected,
         };
         setTimeTravelSnapshots(snapshots);
-        console.log('📊 Time Travel Snapshots Set:', {
-          districtId,
-          snapshots,
-          currentYear,
-        });
       } catch (err) {
         if (cancelled) return;
         setError(err.message || 'Failed to fetch district data');
@@ -161,7 +156,7 @@ export function useDistrictData(districtId, timeHorizon) {
     return () => {
       cancelled = true;
     };
-  }, [districtId]);
+  }, [currentYear, districtId]);
 
 
   // Fetch narrative separately (can be slower due to LLM)
