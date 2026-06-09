@@ -1,7 +1,5 @@
 # AgriSmart
 
-![AgriSmart demo preview](docs/assets/agrismart-demo-preview.svg)
-
 AgriSmart is a full-stack agricultural intelligence dashboard for exploring climate, soil, water, crop, and policy risk across Indian districts. It combines an interactive geospatial UI with a TypeScript Fastify API, deterministic scoring services, local reference data, and optional Mistral-powered narratives and policy analysis.
 
 The project is designed to demonstrate production-minded engineering in a public portfolio repo: clear separation between UI, API, domain logic, infrastructure adapters, validation, tests, CI, and security-sensitive AI integration.
