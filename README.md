@@ -1,5 +1,7 @@
 # AgriSmart
 
+![AgriSmart demo preview](docs/assets/agrismart-demo-preview.svg)
+
 AgriSmart is a full-stack agricultural intelligence dashboard for exploring climate, soil, water, crop, and policy risk across Indian districts. It combines an interactive geospatial UI with a TypeScript Fastify API, deterministic scoring services, local reference data, and optional Mistral-powered narratives and policy analysis.
 
 The project is designed to demonstrate production-minded engineering in a public portfolio repo: clear separation between UI, API, domain logic, infrastructure adapters, validation, tests, CI, and security-sensitive AI integration.
@@ -93,7 +95,7 @@ All API routes are registered under `/api`.
 | Method | Route | Purpose |
 | --- | --- | --- |
 | `GET` | `/api/health` | Service health, version, uptime, and timestamp. |
-| `GET` | `/api/hotspots?issue=soil|yield` | Hotspot GeoJSON, optionally scoped by issue type. |
+| `GET` | `/api/hotspots?issue=soil\|yield` | Hotspot GeoJSON, optionally scoped by issue type. |
 | `GET` | `/api/districts/:district_id` | District fixture plus calculated health scores. |
 | `GET` | `/api/crops/recommendations/:district_id` | Ranked crop recommendations and companion benefits. |
 | `POST` | `/api/llm/feature1-narrative` | AI land intelligence narrative for a district. |
@@ -267,3 +269,7 @@ npm run ci
 - AI features depend on external Mistral availability, valid keys, and provider rate limits.
 - Uploaded policy data is not stored by the app, but it can be sent to the server and then to Mistral when AI analysis is requested.
 - The repository does not currently include a license file.
+
+## License
+
+All rights reserved. This repository is public for portfolio and recruitment review. Reuse, redistribution, or commercial use requires explicit written permission from Karthik Ramesh.
