@@ -4,6 +4,12 @@ AgriSmart is a full-stack agricultural intelligence dashboard for exploring clim
 
 The project is designed to demonstrate production-minded engineering in a public portfolio repo: clear separation between UI, API, domain logic, infrastructure adapters, validation, tests, CI, and security-sensitive AI integration.
 
+## Product Screenshot
+
+Real local product run with the Vite client, Fastify API, MapLibre, deck.gl district layers, and committed public fixture data.
+
+![AgriSmart interactive India risk map with degradation-colored districts](docs/assets/screenshots/agrismart-dashboard.png)
+
 ## What It Does
 
 AgriSmart helps users inspect district-level agricultural risk and compare interventions:
