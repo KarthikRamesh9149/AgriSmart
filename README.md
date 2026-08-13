@@ -1,6 +1,6 @@
 # AgriSmart
 
-AgriSmart is a full-stack agricultural intelligence dashboard for exploring climate, soil, water, crop, and policy risk across Indian districts. It combines an interactive geospatial UI with a TypeScript Fastify API, deterministic scoring services, local reference data, and optional Mistral-powered narratives and policy analysis.
+AgriSmart is a full-stack agricultural intelligence dashboard for exploring climate, soil, water, crop, and policy risk across Indian districts. It combines an interactive geospatial UI with a TypeScript Fastify API, deterministic scoring services, local reference data, and an optional, explicitly enabled Mistral adapter. The default installation is offline and makes zero provider calls.
 
 The project is designed to demonstrate production-minded engineering in a public portfolio repo: clear separation between UI, API, domain logic, infrastructure adapters, validation, tests, CI, and security-sensitive AI integration.
 
@@ -53,6 +53,7 @@ Browser
         | /api through Vite proxy in development
         v
 Fastify API
+  request ID -> actor/tenant auth -> validation -> quotas/idempotency
   routes -> use cases -> domain services -> repositories / AI service
         |
         +-- file-backed repositories
@@ -61,7 +62,7 @@ Fastify API
         |     client/public/hotspots.geojson
         |
         +-- optional Mistral API calls
-              server-side keys only
+              AI_MODE=mistral + server-side key required
 ```
 
 The server is intentionally layered:
@@ -102,10 +103,10 @@ All API routes are registered under `/api`.
 | `GET` | `/api/hotspots?issue=soil\|yield` | Hotspot GeoJSON, optionally scoped by issue type. |
 | `GET` | `/api/districts/:district_id` | District fixture plus calculated health scores. |
 | `GET` | `/api/crops/recommendations/:district_id` | Ranked crop recommendations and companion benefits. |
-| `POST` | `/api/llm/feature1-narrative` | AI land intelligence narrative for a district. |
+| `POST` | `/api/llm/feature1-narrative` | Authenticated AI/local land narrative. |
 | `POST` | `/api/llm/feature2-why` | AI explanation for crop recommendations. |
 | `POST` | `/api/llm/feature3-brief` | AI policy cabinet brief for a district. |
-| `POST` | `/api/llm/policy-freeform` | AI analysis or polish pass for uploaded CSV/XLSX content. |
+| `POST` | `/api/llm/policy-freeform` | Authenticated analysis/polish; requires `Idempotency-Key`. |
 | `POST` | `/api/llm/feature4-time-travel` | AI or deterministic climate snapshot for a time horizon. |
 
 ## Requirements
@@ -137,6 +138,15 @@ NODE_ENV=development
 LOG_LEVEL=debug
 CLIENT_ORIGINS=http://localhost:5173
 
+AI_MODE=disabled
+AUTH_MODE=demo
+DEMO_API_TOKEN=
+AUTH_TOKENS_JSON=
+AI_ACTOR_REQUEST_LIMIT=10
+AI_TENANT_REQUEST_LIMIT=50
+AI_ACTOR_COST_LIMIT_USD=0.25
+AI_TENANT_COST_LIMIT_USD=1.00
+
 MISTRAL_FEATURE1_KEY=
 MISTRAL_FEATURE1_MODEL=mistral-small-latest
 MISTRAL_FEATURE2_KEY=
@@ -155,6 +165,11 @@ MISTRAL_BRIEF_MODEL=mistral-medium-latest
 | `NODE_ENV` | No | `development`, `production`, or `test`. Defaults to `development`. |
 | `LOG_LEVEL` | No | Pino log level. Defaults to `info`. |
 | `CLIENT_ORIGINS` | Production | Comma-separated CORS allowlist. In production, set this explicitly. |
+| `AI_MODE` | No | `disabled` by default. In this mode keys are ignored and provider calls are impossible through the adapter. Set `mistral` explicitly to opt in. |
+| `AUTH_MODE` | No | `demo` locally or `token`. Production startup rejects demo mode. |
+| `DEMO_API_TOKEN` | No | Optional local bearer token. A blank value is valid and enables the request-local demo identity. |
+| `AUTH_TOKENS_JSON` | Token mode | JSON map from bearer tokens to `{ "actorId", "tenantId" }`. Tokens are SHA-256 digested on startup and compared as fixed-length digests. Use a secret manager in production. |
+| `AI_*_LIMIT*` | No | Fixed-window request and estimated-cost reservation caps for both actor and tenant. Defaults are shown above. |
 | `MISTRAL_FEATURE1_KEY` | For AI narrative | Used by land intelligence narrative generation. |
 | `MISTRAL_FEATURE2_KEY` | For AI crop rationale | Used by crop recommendation explanations. |
 | `MISTRAL_FEATURE3_KEY` | For AI policy analysis | Used by policy brief and uploaded sheet analysis. |
@@ -204,16 +219,40 @@ npm run ci
 
 `npm run ci` performs linting, workspace tests, and production builds.
 
-## Security And Privacy
+## Security, cost controls, and threat model
 
-- Mistral API keys are server-side only and loaded from `.env`.
+- Mistral API keys are server-side only. `AI_MODE=disabled` is fail-closed and guarantees that the provider client cannot call the network, even if a key is accidentally present.
+- Every AI and policy route resolves an immutable request-local `{actorId, tenantId}`. Token identities cannot be supplied in request bodies or identity headers. Shared/production deployments must use token mode.
+- Provider reservations are enforced independently per actor and per tenant for request count and estimated USD cost. The fixed one-hour window is process-local, expired identities are evicted, and the store has a hard identity cap. Multi-instance production needs a shared atomic quota store before scale-out.
+- Policy mutations require an 8–128 character idempotency key. Replay keys are scoped to tenant, actor, route, and key. The included SQLite migration creates the same composite boundary and quarantines unsafe legacy unscoped rows rather than guessing ownership.
 - `.env` and environment-specific local files are ignored by git.
 - CORS is environment-aware; production should use an explicit `CLIENT_ORIGINS` allowlist.
-- The Fastify server applies request IDs, structured request/response logging, a 1 MB body limit, and rate limiting of 60 requests per minute.
-- Route inputs and configuration are validated with Zod.
+- The Fastify server applies request IDs, structured request/response logging, a 1 MB transport body limit, and rate limiting of 60 requests per minute.
+- Route inputs are strict and bounded: district IDs 64 characters, policy CSV 20,000 characters, draft 8,000, filename 255, 64 headers of 100 characters, and declared row count 100,000. Unknown fields are rejected.
+- Client responses use stable generic errors and do not expose Zod details, internal paths, provider bodies, stack traces, or valid-ID inventories. Diagnostic detail remains server-side.
 - Policy uploads are parsed in the browser. The uploaded sheet content is sent to the server only when the user requests AI analysis or polishing.
 - The browser uses `read-excel-file` for XLSX parsing rather than the deprecated `xlsx` package.
-- This project does not implement authentication, authorization, tenant isolation, or persistent storage.
+- Threats addressed here include anonymous paid calls, cross-tenant replay, actor-context spoofing, prompt amplification, accidental paid calls in demo/test, quota exhaustion, token timing leakage, and internal-error disclosure. This prototype does not provide a user directory, token rotation service, distributed quota ledger, encrypted persistence, WAF, or professional agronomic assurance.
+
+### Authenticated API example
+
+```bash
+curl -sS http://localhost:8787/api/llm/policy-freeform \
+  -H 'Authorization: Bearer YOUR_LOCAL_TOKEN' \
+  -H 'Idempotency-Key: policy-demo-0001' \
+  -H 'Content-Type: application/json' \
+  --data '{"csv_text":"district,crop\\nmandya,ragi","headers":["district","crop"],"row_count":1}'
+```
+
+In the default blank-token demo configuration, omit `Authorization`; this convenience is rejected when `NODE_ENV=production`.
+
+### Operations
+
+- Keep `AI_MODE=disabled` for offline demos, CI, tests, and any environment without approved provider spend.
+- To enable Mistral, set `AI_MODE=mistral`, configure only the feature keys you intend to use, set conservative actor/tenant caps, and monitor structured response/status logs. Provider failures in optional policy and climate paths fall back locally; core district data remains independent.
+- A restart clears the in-memory budget and replay cache. Do not run multiple replicas as a production enforcement boundary until both are replaced by transactional shared storage.
+- Back up persistent state before applying `server/src/infrastructure/persistence/migrations/001_actor_bound_idempotency.sql`. The migration never promotes legacy unscoped keys; archive them after the required retention period.
+- SQLite databases, journals, WAL and shared-memory files are ignored by Git. Verify backups and migration state before rollback.
 
 ## Project Structure
 
@@ -251,14 +290,14 @@ npm run ci
 | `npm install` fails on Node version | Node is older than the engine requirement. | Use Node `20.19.0` or newer, for example with `nvm use`. |
 | Client loads but API calls fail | Fastify server is not running or the Vite proxy cannot reach port `8787`. | Run `npm run dev` from the repo root and confirm `/api/health` responds. |
 | District panel shows missing data | The clicked district is not one of the four detailed fixtures. | Try `ahmednagar_mh`, `yavatmal_mh`, `bathinda_pb`, or `mandya_ka`. |
-| AI narrative or brief fails | Missing Mistral key, invalid key, provider error, or rate limit. | Set the relevant `MISTRAL_FEATURE*_KEY`, check logs, and retry. |
+| AI route returns local output | `AI_MODE=disabled` (the default) or no feature key is configured. | Keep this for offline use, or explicitly set `AI_MODE=mistral`, configure the relevant key, and review cost caps. |
 | Policy deterministic checks do not appear | Uploaded sheet does not use the structured policy columns. | Dynamic schemas still support AI analysis; structured checks require `district_id`, `crop`, `budget_amount_inr_lakh`, `subsidy_type`, and `target_area_hectares`. |
 | Production CORS requests are blocked | `CLIENT_ORIGINS` is empty or missing the frontend origin. | Set `CLIENT_ORIGINS` to the exact allowed origins as a comma-separated list. |
 
 ## Roadmap
 
 - Replace fixture-backed district details with a complete district data source or database-backed repository.
-- Add authentication and role-aware access for policy upload workflows.
+- Add managed identity, role-aware authorization, rotation, and a distributed quota/idempotency backend for multi-instance deployments.
 - Persist policy analyses and generated briefs with audit metadata.
 - Add API integration tests for route contracts and error handling.
 - Add end-to-end browser tests for the map, panel tabs, file upload, and PDF export workflows.
@@ -270,9 +309,8 @@ npm run ci
 - No deployed URL is documented in this repo.
 - Deep district workflows are limited to four detailed fixtures.
 - Some climate time-horizon data is deterministic fixture logic rather than live climate model integration.
-- AI features depend on external Mistral availability, valid keys, and provider rate limits.
+- AI features are disabled by default; enabled calls depend on external Mistral availability, valid keys, configured budgets, and provider rate limits.
 - Uploaded policy data is not stored by the app, but it can be sent to the server and then to Mistral when AI analysis is requested.
-- The repository does not currently include a license file.
 
 ## License
 

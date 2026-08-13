@@ -21,6 +21,8 @@ import type { IDistrictRepository } from './application/ports/IDistrictRepositor
 import type { IHotspotsRepository } from './application/ports/IHotspotsRepository.js';
 import type { ICropRepository } from './application/ports/ICropRepository.js';
 import type { IAiService } from './application/ports/IAiService.js';
+import { AiBudget } from './infrastructure/security/AiBudget.js';
+import { IdempotencyStore } from './infrastructure/security/IdempotencyStore.js';
 
 export interface Container {
   // Repositories
@@ -32,6 +34,9 @@ export interface Container {
   aiService: IAiService;
   scoreCalculator: ScoreCalculator;
   cropMatcher: CropMatcher;
+  aiBudget: AiBudget;
+  aiMode: Config['aiMode'];
+  idempotencyStore: IdempotencyStore;
 
   // Use Cases
   getDistrictUseCase: GetDistrictUseCase;
@@ -47,12 +52,14 @@ export function createContainer(config: Config): Container {
   const districtRepo = new FileDistrictRepository();
   const hotspotsRepo = new FileHotspotsRepository();
   const cropRepo = new FileCropRepository();
-  const mistralClient = new MistralClient(config.mistral);
+  const mistralClient = new MistralClient(config.mistral, config.aiMode);
   const aiService = new MistralAiService(mistralClient, config.mistral);
 
   // Domain Services
   const scoreCalculator = new ScoreCalculator();
   const cropMatcher = new CropMatcher();
+  const aiBudget = new AiBudget(config.aiLimits);
+  const idempotencyStore = new IdempotencyStore();
 
   // Use Cases
   const getDistrictUseCase = new GetDistrictUseCase(districtRepo, scoreCalculator);
@@ -77,6 +84,9 @@ export function createContainer(config: Config): Container {
     aiService,
     scoreCalculator,
     cropMatcher,
+    aiBudget,
+    aiMode: config.aiMode,
+    idempotencyStore,
     getDistrictUseCase,
     getHotspotsUseCase,
     generateNarrativeUseCase,

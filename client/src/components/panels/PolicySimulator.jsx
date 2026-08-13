@@ -198,7 +198,10 @@ function PolicySimulator({ districtId, districtData, cropRecommendations }) {
       if (USE_REAL_API) {
         const res = await fetch('/api/llm/policy-freeform', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Idempotency-Key': crypto.randomUUID(),
+          },
           body: JSON.stringify({
             district_id: targetDistrict,
             file_name: fileName,
@@ -248,7 +251,10 @@ function PolicySimulator({ districtId, districtData, cropRecommendations }) {
       if (USE_REAL_API) {
         const res = await fetch('/api/llm/policy-freeform', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Idempotency-Key': crypto.randomUUID(),
+          },
           body: JSON.stringify({
             district_id: targetDistrict,
             file_name: fileName,

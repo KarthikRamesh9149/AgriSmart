@@ -1,330 +1,124 @@
-/**
- * LLM Routes
- * POST /api/llm/feature1-narrative - Generate land intelligence narrative
- * POST /api/llm/feature2-why - Generate crop recommendation explanation
- * POST /api/llm/feature3-brief - Generate policy cabinet brief
- * POST /api/llm/policy-freeform - Analyze dynamic CSV/XLSX policy data
- * POST /api/llm/feature4-time-travel - Generate climate snapshot for time horizon
- */
-
-import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import type { Container } from '../../../container.js';
+import type { ActorContext } from '../../../infrastructure/security/ActorContext.js';
+import { requireActor } from '../../../infrastructure/security/ActorContext.js';
+import { AppError } from '../../../domain/errors/AppError.js';
 import { logger } from '../../../infrastructure/logging/logger.js';
 
-const LlmRequestSchema = z.object({
-  district_id: z.string().min(1, 'district_id is required'),
-});
-
+const districtId = z.string().trim().min(1).max(64).regex(/^[a-z0-9_]+$/);
+const LlmRequestSchema = z.object({ district_id: districtId }).strict();
 const FreeformPolicyRequestSchema = z.object({
-  csv_text: z.string().min(1, 'csv_text is required'),
-  file_name: z.string().optional(),
-  district_id: z.string().optional(),
-  headers: z.array(z.string()).optional(),
-  row_count: z.number().int().nonnegative().optional(),
-  mode: z.enum(['analyze', 'polish']).optional(),
-  draft: z.string().optional(),
+  csv_text: z.string().min(1).max(20_000),
+  file_name: z.string().trim().min(1).max(255).optional(),
+  district_id: districtId.optional(),
+  headers: z.array(z.string().trim().min(1).max(100)).max(64).optional(),
+  row_count: z.number().int().nonnegative().max(100_000).optional(),
+  mode: z.enum(['analyze', 'polish']).default('analyze'),
+  draft: z.string().max(8_000).optional(),
+}).strict().superRefine((value, ctx) => {
+  if (value.mode === 'polish' && !value.draft?.trim()) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['draft'], message: 'draft required' });
+  }
 });
-
 const TimeTravelRequestSchema = z.object({
-  district_id: z.string().min(1, 'district_id is required'),
+  district_id: districtId,
   time_horizon: z.number().int().gte(1900).lte(2100),
   current_year: z.number().int().gte(1900).lte(2100).optional(),
-});
+}).strict();
+const IdempotencyKeySchema = z.string().min(8).max(128).regex(/^[A-Za-z0-9._:-]+$/);
 
-interface LlmRequestBody {
-  district_id: string;
+type LlmBody = z.input<typeof LlmRequestSchema>;
+type PolicyBody = z.input<typeof FreeformPolicyRequestSchema>;
+type TimeBody = z.input<typeof TimeTravelRequestSchema>;
+
+function invalid(reply: FastifyReply) {
+  return reply.status(400).send({ error: { code: 'VALIDATION_ERROR', message: 'Invalid request' } });
 }
 
-interface FreeformPolicyRequestBody {
-  csv_text: string;
-  file_name?: string;
-  district_id?: string;
-  headers?: string[];
-  row_count?: number;
-  mode?: 'analyze' | 'polish';
-  draft?: string;
-}
-
-interface TimeTravelRequestBody {
-  district_id: string;
-  time_horizon: number;
-  current_year?: number;
+function reserveIfProvider(container: Container, actor: ActorContext, feature: 1 | 2 | 3 | 4, cost: number): void {
+  if (container.aiService.isAvailable(feature)) container.aiBudget.reserve(actor, cost);
 }
 
 export function createLlmRoutes(container: Container) {
   return async function llmRoutes(fastify: FastifyInstance): Promise<void> {
-    // Feature 1: Land Intelligence Narrative
-    fastify.post<{
-      Body: LlmRequestBody;
-    }>('/llm/feature1-narrative', async (request: FastifyRequest<{ Body: LlmRequestBody }>, reply: FastifyReply) => {
-      const startTime = Date.now();
-
-      // Validate body
-      const parseResult = LlmRequestSchema.safeParse(request.body);
-      if (!parseResult.success) {
-        logger.warn({
-          requestId: request.requestId,
-          errors: parseResult.error.errors,
-        }, 'Invalid feature1 request');
-
-        return reply.status(400).send({
-          error: {
-            code: 'VALIDATION_ERROR',
-            message: 'Invalid request body',
-            details: parseResult.error.errors,
-          },
-        });
-      }
-
-      const { district_id } = parseResult.data;
-
-      logger.info({
-        requestId: request.requestId,
-        district_id,
-        feature: 'feature1-narrative',
-      }, 'Generating narrative');
-
-      const result = await container.generateNarrativeUseCase.execute(district_id);
-
-      const duration = Date.now() - startTime;
-      logger.info({
-        requestId: request.requestId,
-        district_id,
-        duration,
-      }, 'Narrative generated');
-
-      return reply.send(result);
+    fastify.post<{ Body: LlmBody }>('/llm/feature1-narrative', async (request, reply) => {
+      const actor = requireActor(request);
+      const parsed = LlmRequestSchema.safeParse(request.body);
+      if (!parsed.success) return invalid(reply);
+      reserveIfProvider(container, actor, 1, 0.01);
+      return reply.send(await container.generateNarrativeUseCase.execute(parsed.data.district_id));
     });
 
-    // Feature 2: Crop Matchmaker "Why this fits"
-    fastify.post<{
-      Body: LlmRequestBody;
-    }>('/llm/feature2-why', async (request: FastifyRequest<{ Body: LlmRequestBody }>, reply: FastifyReply) => {
-      const startTime = Date.now();
-
-      // Validate body
-      const parseResult = LlmRequestSchema.safeParse(request.body);
-      if (!parseResult.success) {
-        logger.warn({
-          requestId: request.requestId,
-          errors: parseResult.error.errors,
-        }, 'Invalid feature2 request');
-
-        return reply.status(400).send({
-          error: {
-            code: 'VALIDATION_ERROR',
-            message: 'Invalid request body',
-            details: parseResult.error.errors,
-          },
-        });
-      }
-
-      const { district_id } = parseResult.data;
-
-      logger.info({
-        requestId: request.requestId,
-        district_id,
-        feature: 'feature2-why',
-      }, 'Generating crop explanation');
-
-      const result = await container.generateCropWhyUseCase.execute(district_id);
-
-      const duration = Date.now() - startTime;
-      logger.info({
-        requestId: request.requestId,
-        district_id,
-        duration,
-      }, 'Crop explanation generated');
-
-      return reply.send(result);
+    fastify.post<{ Body: LlmBody }>('/llm/feature2-why', async (request, reply) => {
+      const actor = requireActor(request);
+      const parsed = LlmRequestSchema.safeParse(request.body);
+      if (!parsed.success) return invalid(reply);
+      reserveIfProvider(container, actor, 2, 0.02);
+      return reply.send(await container.generateCropWhyUseCase.execute(parsed.data.district_id));
     });
 
-    // Feature 3: Policy Simulator Cabinet Brief
-    fastify.post<{
-      Body: LlmRequestBody;
-    }>('/llm/feature3-brief', async (request: FastifyRequest<{ Body: LlmRequestBody }>, reply: FastifyReply) => {
-      const startTime = Date.now();
+    for (const route of ['/llm/feature3-brief', '/llm/feature3-polish'] as const) {
+      fastify.post<{ Body: LlmBody }>(route, async (request, reply) => {
+        const actor = requireActor(request);
+        const parsed = LlmRequestSchema.safeParse(request.body);
+        if (!parsed.success) return invalid(reply);
+        reserveIfProvider(container, actor, 3, 0.05);
+        return reply.send(await container.generatePolicyBriefUseCase.execute(parsed.data.district_id));
+      });
+    }
 
-      // Validate body
-      const parseResult = LlmRequestSchema.safeParse(request.body);
-      if (!parseResult.success) {
-        logger.warn({
-          requestId: request.requestId,
-          errors: parseResult.error.errors,
-        }, 'Invalid feature3 request');
+    fastify.post<{ Body: PolicyBody; Headers: { 'idempotency-key'?: string } }>(
+      '/llm/policy-freeform',
+      async (request: FastifyRequest<{ Body: PolicyBody; Headers: { 'idempotency-key'?: string } }>, reply) => {
+        const actor = requireActor(request);
+        const parsed = FreeformPolicyRequestSchema.safeParse(request.body);
+        const keyResult = IdempotencyKeySchema.safeParse(request.headers['idempotency-key']);
+        if (!parsed.success || !keyResult.success) return invalid(reply);
+        const key = keyResult.data;
+        const route = request.routeOptions.url ?? '/llm/policy-freeform';
+        const cached = container.idempotencyStore.get(actor, route, key);
+        if (cached) return reply.send(cached);
 
-        return reply.status(400).send({
-          error: {
-            code: 'VALIDATION_ERROR',
-            message: 'Invalid request body',
-            details: parseResult.error.errors,
-          },
-        });
-      }
-
-      const { district_id } = parseResult.data;
-
-      logger.info({
-        requestId: request.requestId,
-        district_id,
-        feature: 'feature3-brief',
-      }, 'Generating policy brief');
-
-      const result = await container.generatePolicyBriefUseCase.execute(district_id);
-
-      const duration = Date.now() - startTime;
-      logger.info({
-        requestId: request.requestId,
-        district_id,
-        duration,
-      }, 'Policy brief generated');
-
-      return reply.send(result);
-    });
-
-    // Feature 3: Policy Simulator Polish (optional enhancement)
-    fastify.post<{
-      Body: LlmRequestBody;
-    }>('/llm/feature3-polish', async (request: FastifyRequest<{ Body: LlmRequestBody }>, reply: FastifyReply) => {
-      // For now, polish just returns the same as brief
-      // In future, this could use a different model or prompt for refinement
-      const parseResult = LlmRequestSchema.safeParse(request.body);
-      if (!parseResult.success) {
-        return reply.status(400).send({
-          error: {
-            code: 'VALIDATION_ERROR',
-            message: 'Invalid request body',
-            details: parseResult.error.errors,
-          },
-        });
-      }
-
-      const { district_id } = parseResult.data;
-      const result = await container.generatePolicyBriefUseCase.execute(district_id);
-      return reply.send(result);
-    });
-
-    // Feature 3: Dynamic CSV/XLSX freeform policy analysis
-    fastify.post<{
-      Body: FreeformPolicyRequestBody;
-    }>('/llm/policy-freeform', async (request: FastifyRequest<{ Body: FreeformPolicyRequestBody }>, reply: FastifyReply) => {
-      try {
-        const parseResult = FreeformPolicyRequestSchema.safeParse(request.body);
-        if (!parseResult.success) {
-          return reply.status(400).send({
-            error: {
-              code: 'VALIDATION_ERROR',
-              message: 'Invalid request body',
-              details: parseResult.error.errors,
-            },
-          });
-        }
-
-        const data = parseResult.data;
-        const csvText = data.csv_text.slice(0, 20000);
-        const district =
-          data.district_id && data.district_id.length > 0
-            ? await container.districtRepo.findById(data.district_id)
-            : null;
-
+        const data = parsed.data;
+        const district = data.district_id ? await container.districtRepo.findById(data.district_id) : null;
+        let analysis: string;
         if (container.aiService.isAvailable(3)) {
+          reserveIfProvider(container, actor, 3, 0.08);
           try {
-            const analysis = await container.aiService.analyzePolicyData({
-              csvText,
-              fileName: data.file_name,
-              headers: data.headers,
-              rowCount: data.row_count,
-              district,
-              mode: data.mode ?? 'analyze',
-              draft: data.draft,
+            analysis = await container.aiService.analyzePolicyData({
+              csvText: data.csv_text, fileName: data.file_name, headers: data.headers,
+              rowCount: data.row_count, district, mode: data.mode, draft: data.draft,
             });
-
-            return reply.send({
-              analysis,
-              generated_at: new Date().toISOString(),
-            });
-          } catch (aiError) {
-            logger.error(
-              {
-                error: (aiError as Error).message,
-                feature: 3,
-                csv_rows: data.row_count,
-              },
-              'Policy analysis failed, using fallback'
-            );
-            // Fall through to fallback mode
+          } catch {
+            logger.warn({ requestId: request.requestId, feature: 3 }, 'Optional AI policy analysis failed');
+            analysis = fallbackPolicy(data.row_count, data.headers, district?.name);
           }
+        } else {
+          analysis = fallbackPolicy(data.row_count, data.headers, district?.name);
         }
-
-        // Fallback when AI is unavailable or fails
-        return reply.send({
-          analysis: `Policy analysis generated in fallback mode.
-Rows: ${data.row_count ?? 0}
-Columns: ${(data.headers ?? []).join(', ') || 'unknown'}
-District: ${district?.name ?? data.district_id ?? 'not provided'}
-Summary: Using fallback analysis mode. Recommendations:
-- Verify MISTRAL_FEATURE3_KEY is set for full dynamic CSV analysis
-- Check API limits and rate limits
-- Ensure CSV is well-formed`,
-          generated_at: new Date().toISOString(),
-        });
-      } catch (error) {
-        logger.error(
-          {
-            error: (error as Error).message,
-            endpoint: '/llm/policy-freeform',
-          },
-          'Policy freeform endpoint error'
-        );
-        return reply.status(500).send({
-          error: {
-            code: 'INTERNAL_SERVER_ERROR',
-            message: 'Policy analysis failed: ' + (error as Error).message,
-          },
-        });
+        const response = { analysis, generated_at: new Date().toISOString() };
+        container.idempotencyStore.set(actor, route, key, response);
+        return reply.send(response);
       }
-    });
+    );
 
-    // Feature 4: Time-travel climate snapshot generation
-    fastify.post<{
-      Body: TimeTravelRequestBody;
-    }>('/llm/feature4-time-travel', async (request: FastifyRequest<{ Body: TimeTravelRequestBody }>, reply: FastifyReply) => {
-      const parseResult = TimeTravelRequestSchema.safeParse(request.body);
-      if (!parseResult.success) {
-        return reply.status(400).send({
-          error: {
-            code: 'VALIDATION_ERROR',
-            message: 'Invalid request body',
-            details: parseResult.error.errors,
-          },
-        });
-      }
-
-      const { district_id, time_horizon, current_year } = parseResult.data;
-      const district = await container.districtRepo.findById(district_id);
-
-      if (!district) {
-        return reply.status(404).send({
-          error: {
-            code: 'NOT_FOUND',
-            message: `District '${district_id}' not found`,
-          },
-        });
-      }
-
+    fastify.post<{ Body: TimeBody }>('/llm/feature4-time-travel', async (request, reply) => {
+      const actor = requireActor(request);
+      const parsed = TimeTravelRequestSchema.safeParse(request.body);
+      if (!parsed.success) return invalid(reply);
+      const district = await container.districtRepo.findById(parsed.data.district_id);
+      if (!district) throw AppError.notFound('District');
+      reserveIfProvider(container, actor, 4, 0.02);
       const snapshot = await container.aiService.generateTimeTravelSnapshot({
-        district,
-        timeHorizon: time_horizon,
-        currentYear: current_year ?? new Date().getUTCFullYear(),
+        district, timeHorizon: parsed.data.time_horizon,
+        currentYear: parsed.data.current_year ?? new Date().getUTCFullYear(),
       });
-
-      return reply.send({
-        district_id,
-        time_horizon,
-        snapshot,
-        generated_at: new Date().toISOString(),
-      });
+      return reply.send({ district_id: parsed.data.district_id, time_horizon: parsed.data.time_horizon, snapshot, generated_at: new Date().toISOString() });
     });
   };
+}
+
+function fallbackPolicy(rows?: number, headers?: string[], district?: string): string {
+  return `Local policy summary. Rows: ${rows ?? 0}. Columns: ${(headers ?? []).join(', ') || 'unknown'}. District: ${district ?? 'not provided'}. Review data quality and validate recommendations with qualified decision-makers.`;
 }

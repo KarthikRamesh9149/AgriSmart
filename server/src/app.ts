@@ -12,6 +12,7 @@ import { requestIdPlugin } from './infrastructure/middleware/requestId.js';
 import { errorHandlerPlugin } from './interfaces/http/plugins/errorHandler.js';
 import { createRegisterRoutes } from './interfaces/http/routes/index.js';
 import { createContainer } from './container.js';
+import { registerActorContext } from './infrastructure/security/ActorContext.js';
 
 export async function buildApp(): Promise<FastifyInstance> {
   const fastify = Fastify({
@@ -44,10 +45,11 @@ export async function buildApp(): Promise<FastifyInstance> {
   });
 
   // Register request ID middleware
-  await fastify.register(requestIdPlugin);
+  await requestIdPlugin(fastify);
+  await registerActorContext(fastify, config);
 
   // Register error handler
-  await fastify.register(errorHandlerPlugin);
+  await errorHandlerPlugin(fastify);
 
   // Request logging hook
   fastify.addHook('onRequest', async (request) => {

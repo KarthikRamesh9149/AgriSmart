@@ -7,7 +7,9 @@ import { logger } from '../logging/logger.js';
 
 const MISTRAL_API_URL = 'https://api.mistral.ai/v1/chat/completions';
 const DEFAULT_TIMEOUT_MS = 30000;
-const MAX_RETRIES = 1;
+// A reservation represents exactly one potentially billable call. Do not make
+// an automatic paid retry without a second explicit reservation.
+const MAX_RETRIES = 0;
 
 export interface MistralConfig {
   feature1: { key?: string; model: string };
@@ -54,7 +56,7 @@ export type FeatureKey = 'feature1' | 'feature2' | 'feature3' | 'feature4' | 'br
 export class MistralClient {
   private readonly config: MistralConfig;
 
-  constructor(config: MistralConfig) {
+  constructor(config: MistralConfig, private readonly aiMode: 'disabled' | 'mistral') {
     this.config = config;
   }
 
@@ -63,7 +65,7 @@ export class MistralClient {
    */
   hasKey(feature: FeatureKey): boolean {
     const key = this.config[feature]?.key;
-    return typeof key === 'string' && key.length > 0;
+    return this.aiMode === 'mistral' && typeof key === 'string' && key.length > 0;
   }
 
   /**
@@ -81,6 +83,9 @@ export class MistralClient {
     messages: MistralMessage[],
     options: { temperature?: number; maxTokens?: number } = {}
   ): Promise<string> {
+    if (this.aiMode === 'disabled') {
+      throw new Error('AI provider calls are disabled');
+    }
     const apiKey = this.config[feature]?.key;
     const model = this.getModel(feature);
 

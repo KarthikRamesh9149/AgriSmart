@@ -33,3 +33,10 @@ coverage/
 # Temporary files
 *.tmp
 *.temp
+
+# Local persistence (never commit actor data, idempotency state, or WAL files)
+*.sqlite
+*.sqlite3
+*.db
+*.db-wal
+*.db-shm
